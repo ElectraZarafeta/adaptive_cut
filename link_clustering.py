@@ -8,13 +8,9 @@
 
 from itertools import combinations, chain
 from collections import defaultdict
-from re import A
-from scipy.cluster import hierarchy
-import matplotlib.pyplot as plt
-from scipy.cluster.hierarchy import dendrogram
 from copy import copy
 
-#%%
+
 def swap(a,b):
     if a > b:
         return b,a
@@ -56,8 +52,8 @@ def read_edgelist_weighted(filename, delimiter=None):
     return dict(adj), edges, wij_dict
 
 # Step 1, 2
-#adj, edges = read_edgelist_unweighted('lesmis/lesmis_unweighted.txt', '-')
-adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
+adj, edges = read_edgelist_unweighted('lesmis/lesmis_unweighted.txt', '-')
+#adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
 
 #%%
 
@@ -77,7 +73,7 @@ def similarities_unweighted(adj):
                 jaccard_index = len(inc_ni & inc_nj) / len(inc_ni | inc_nj)
                 # Create list with calculated similarities for all connected pairs of links
                 similarities.append((1-jaccard_index, edges)) 
-
+                
     similarities.sort(key = lambda x: (x[0], x[1]))
     return similarities
 
@@ -113,8 +109,8 @@ def similarities_weighted(adj, wij):
     return similarities
 
 # Step 3
-#similarities = similarities_unweighted(adj)
-similarities = similarities_weighted(adj, wij)
+similarities = similarities_unweighted(adj)
+#similarities = similarities_weighted(adj, wij)
 #%%
 
 # Each link is initially assigned to its own community
@@ -138,20 +134,53 @@ edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid = initialize_edges(ed
 
 # Link density
 def Dc(m, n):
-    return (m * (m - n + 1.0)) / ((n - 2.0) * (n - 1.0))
+    try:
+        return (m * (m - n + 1.0)) / ((n - 2.0) * (n - 1.0))
+    except ZeroDivisionError:
+        return 0.0
+    
 
 # Single-linkage hierarchical clustering
-linkage = []
+linkage = [] # [(comm_id1, comm_id2, oms, num_edges)]
+D = 0.0 # partition density
 
-for oms, edges in similarities:
+
+list_D = [(0.0, 1.0)] # (Partion density value, Similarity value)
+list_D_plot = [(0.0, 0.0)]
+best_D = 0.0
+best_S = 1.0
+best_P = None # partition P = {P1,...,Pc} of the links into C subsets, antistoixei sto dict edge2cid
+S_prev = -1.0
+M = 2/len(edges)
+Dc_tmp = 0
+
+for oms, edges in chain(similarities, [(1.0, (None, None))]):
     sim = 1-oms
+
+    if sim != S_prev:
+
+        # if D >= best_D:
+        #     best_D = D
+        #     best_S = S
+        #     best_P = copy(edge2cid)
+        
+        list_D.append((D, sim))
+        list_D_plot.append((D, oms))
+        S_prev = sim
+
+
     edge1, edge2 = edges[0], edges[1]
+    if not edge1 or not edge2: # We'll get (None, None) at the end of clustering
+        continue
 
     comm_id1, comm_id2 = edge2cid[edge1], edge2cid[edge2]
     if comm_id1 == comm_id2: # already merged!
         continue
 
-    m1,m2 = len(cid2edges[comm_id1]),len(cid2edges[comm_id2])
+    m1, m2 = len(cid2edges[comm_id1]), len(cid2edges[comm_id2])
+    n1, n2 = len(cid2nodes[comm_id1]), len(cid2nodes[comm_id2])
+    Dc1, Dc2 = Dc(m1, n1), Dc(m2, n2) 
+
     if m2 > m1:
         comm_id1, comm_id2 = comm_id2, comm_id1
 
@@ -164,18 +193,29 @@ for oms, edges in similarities:
         cid2nodes[newcid] |= set(e)
         edge2cid[e] = newcid
 
-    num_samples = len(cid2edges[comm_id1]) + len(cid2edges[comm_id2])
-
     del cid2edges[comm_id1], cid2nodes[comm_id1]
     del cid2edges[comm_id2], cid2nodes[comm_id2]
+    m, n = len(cid2edges[newcid]), len(cid2nodes[newcid])
 
-    linkage.append((comm_id1, comm_id2, oms, num_samples))
+    linkage.append((comm_id1, comm_id2, oms, m))
 
-linkage
+    Dc12 = Dc(m, n)
+    D += (Dc12 - Dc1 - Dc2) * M
+
 #%%
 
-fig = plt.figure(figsize=(40,40))
-dendrogram(linkage, labels=list(orig_cid2edge.values()))
-plt.show()
+# Save the outputs for the dendrogram and partition density
+
+with open('output/orig_cid2edge.txt', 'w') as f:
+        for cid, e in orig_cid2edge.items():
+            f.write("%d\t%s,%s\n" % (cid, str(e[0]), str(e[1])))
+
+with open('output/linkage.txt', 'w') as f:
+    for x in linkage:
+        f.write('%s\n' % '\t'.join(map(str, x)))
+
+with open('output/list_D_plot.txt', 'w') as f:
+    for x in list_D_plot:
+        f.write('%s\n' % '\t'.join(map(str, x)))
 
 #%%

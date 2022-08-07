@@ -1,9 +1,0 @@
-core periphery network 
-present it
-connection with link similarity?
-all the splits are on the right
-
-
-hierarchical clustering of asymmetric networks
-
-where its sparse less communities

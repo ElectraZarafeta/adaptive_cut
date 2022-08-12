@@ -9,6 +9,7 @@
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
+import pickle
 
 
 def swap(a,b):
@@ -153,6 +154,7 @@ best_P = None # partition P = {P1,...,Pc} of the links into C subsets, antistoix
 S_prev = -1.0
 M = 2/len(edges)
 Dc_tmp = 0
+newcid2cids = {}
 
 for oms, edges in chain(similarities, [(1.0, (None, None))]):
     sim = 1-oms
@@ -186,6 +188,7 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
 
     curr_maxcid += 1
     newcid = curr_maxcid
+    newcid2cids[newcid] = (comm_id1, comm_id2)
     cid2edges[newcid] = cid2edges[comm_id1] | cid2edges[comm_id2]
     cid2nodes[newcid] = set()
 
@@ -193,8 +196,8 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
         cid2nodes[newcid] |= set(e)
         edge2cid[e] = newcid
 
-    del cid2edges[comm_id1], cid2nodes[comm_id1]
-    del cid2edges[comm_id2], cid2nodes[comm_id2]
+    # del cid2edges[comm_id1], cid2nodes[comm_id1]
+    # del cid2edges[comm_id2], cid2nodes[comm_id2]
     m, n = len(cid2edges[newcid]), len(cid2nodes[newcid])
 
     linkage.append((comm_id1, comm_id2, oms, m))
@@ -204,11 +207,14 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
 
 #%%
 
-# Save the outputs for the dendrogram and partition density
+def save_dict(dictname, filename):
+    f = open("output/"+filename,"wb")
 
-with open('output/orig_cid2edge.txt', 'w') as f:
-        for cid, e in orig_cid2edge.items():
-            f.write("%d\t%s,%s\n" % (cid, str(e[0]), str(e[1])))
+    pickle.dump(dictname,f)
+
+    f.close()
+
+# for the dendrogram plot and partition density plot
 
 with open('output/linkage.txt', 'w') as f:
     for x in linkage:
@@ -217,5 +223,12 @@ with open('output/linkage.txt', 'w') as f:
 with open('output/list_D_plot.txt', 'w') as f:
     for x in list_D_plot:
         f.write('%s\n' % '\t'.join(map(str, x)))
+
+save_dict(orig_cid2edge, 'orig_cid2edge.pkl')
+
+# for the adaptive cut
+save_dict(newcid2cids, 'newcid2cids.pkl')
+save_dict(cid2edges, 'cid2edges.pkl')
+save_dict(cid2nodes, 'cid2nodes.pkl')
 
 #%%

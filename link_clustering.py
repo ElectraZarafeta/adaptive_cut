@@ -116,7 +116,7 @@ similarities = similarities_unweighted(adj)
 
 # Each link is initially assigned to its own community
 def initialize_edges(edges):
-    edge2cid, cid2edges, orig_cid2edge, cid2nodes = {}, {}, {}, {}
+    edge2cid, cid2edges, orig_cid2edge, cid2nodes, is_grouped = {}, {}, {}, {}, {}
 
     for cid,edge in enumerate(edges):
         edge = swap(*edge) # just in case
@@ -124,12 +124,13 @@ def initialize_edges(edges):
         cid2edges[cid] = set([edge])
         orig_cid2edge[cid]  = edge
         cid2nodes[cid] = set( edge )
+        is_grouped[edge] = False
     curr_maxcid = len(edges) - 1
 
-    return edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid
+    return edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, is_grouped
 
 # Step 4
-edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid = initialize_edges(edges)
+edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, is_grouped = initialize_edges(edges)
 
 #%%
 
@@ -155,17 +156,21 @@ S_prev = -1.0
 M = 2/len(edges)
 Dc_tmp = 0
 newcid2cids = {}
+tmp_lst, tmp_lst2 = [], []
+
+#%%
+
+with open('output/num_edges.txt', 'w') as f:
+    f.write('%d' % len(edges))
 
 for oms, edges in chain(similarities, [(1.0, (None, None))]):
     sim = 1-oms
 
     if sim != S_prev:
-
-        # if D >= best_D:
-        #     best_D = D
-        #     best_S = S
-        #     best_P = copy(edge2cid)
         
+        for k in is_grouped:
+            is_grouped[k] = False
+
         list_D.append((D, sim))
         list_D_plot.append((D, oms))
         S_prev = sim
@@ -176,9 +181,26 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
         continue
 
     comm_id1, comm_id2 = edge2cid[edge1], edge2cid[edge2]
+
+    
     if comm_id1 == comm_id2: # already merged!
         continue
+    elif is_grouped[edge1]:
+        tmp_lst.append(comm_id2)
+        
+    elif is_grouped[edge2]:
+        tmp_lst.append(comm_id1)
+        
+    else:
+        tmp_lst = []
+        tmp_lst.append(comm_id1)
+        tmp_lst.append(comm_id2)
+        if len(tmp_lst) != 0:
+            tmp_lst2.append(tmp_lst)
+        
 
+    is_grouped[edge1] = True
+    is_grouped[edge2] = True
     m1, m2 = len(cid2edges[comm_id1]), len(cid2edges[comm_id2])
     n1, n2 = len(cid2nodes[comm_id1]), len(cid2nodes[comm_id2])
     Dc1, Dc2 = Dc(m1, n1), Dc(m2, n2) 
@@ -188,7 +210,7 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
 
     curr_maxcid += 1
     newcid = curr_maxcid
-    newcid2cids[newcid] = (comm_id1, comm_id2)
+    newcid2cids[newcid] = swap(comm_id1, comm_id2)
     cid2edges[newcid] = cid2edges[comm_id1] | cid2edges[comm_id2]
     cid2nodes[newcid] = set()
 
@@ -230,5 +252,6 @@ save_dict(orig_cid2edge, 'orig_cid2edge.pkl')
 save_dict(newcid2cids, 'newcid2cids.pkl')
 save_dict(cid2edges, 'cid2edges.pkl')
 save_dict(cid2nodes, 'cid2nodes.pkl')
+save_dict(tmp_lst2, 'groups.pkl')
 
 #%%

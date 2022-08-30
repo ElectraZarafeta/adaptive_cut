@@ -9,7 +9,7 @@
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
-import pickle
+from helper_functions import *
 
 
 def swap(a,b):
@@ -53,7 +53,7 @@ def read_edgelist_weighted(filename, delimiter=None):
     return dict(adj), edges, wij_dict
 
 # Step 1, 2
-adj, edges = read_edgelist_unweighted('lesmis/lesmis_unweighted.txt', '-')
+adj, edges = read_edgelist_unweighted('lesmis/test.txt', '-')
 #adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
 
 #%%
@@ -132,20 +132,11 @@ def initialize_edges(edges):
 # Step 4
 edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, is_grouped = initialize_edges(edges)
 
-#%%
-
-# Link density
-def Dc(m, n):
-    try:
-        return (m * (m - n + 1.0)) / ((n - 2.0) * (n - 1.0))
-    except ZeroDivisionError:
-        return 0.0
-    
+#%%    
 
 # Single-linkage hierarchical clustering
 linkage = [] # [(comm_id1, comm_id2, oms, num_edges)]
 D = 0.0 # partition density
-
 
 list_D = [(0.0, 1.0)] # (Partion density value, Similarity value)
 list_D_plot = [(0.0, 0.0)]
@@ -160,7 +151,7 @@ tmp_lst, tmp_lst2 = [], []
 
 #%%
 
-with open('output/num_edges.txt', 'w') as f:
+with open('output/link_clustering/num_edges.txt', 'w') as f:
     f.write('%d' % len(edges))
 
 for oms, edges in chain(similarities, [(1.0, (None, None))]):
@@ -218,8 +209,6 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
         cid2nodes[newcid] |= set(e)
         edge2cid[e] = newcid
 
-    # del cid2edges[comm_id1], cid2nodes[comm_id1]
-    # del cid2edges[comm_id2], cid2nodes[comm_id2]
     m, n = len(cid2edges[newcid]), len(cid2nodes[newcid])
 
     linkage.append((comm_id1, comm_id2, oms, m))
@@ -229,29 +218,15 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
 
 #%%
 
-def save_dict(dictname, filename):
-    f = open("output/"+filename,"wb")
-
-    pickle.dump(dictname,f)
-
-    f.close()
-
 # for the dendrogram plot and partition density plot
-
-with open('output/linkage.txt', 'w') as f:
-    for x in linkage:
-        f.write('%s\n' % '\t'.join(map(str, x)))
-
-with open('output/list_D_plot.txt', 'w') as f:
-    for x in list_D_plot:
-        f.write('%s\n' % '\t'.join(map(str, x)))
-
-save_dict(orig_cid2edge, 'orig_cid2edge.pkl')
+save_dict(linkage, 'output/link_clustering/linkage.pkl')
+save_dict(list_D_plot, 'output/link_clustering/list_D_plot.pkl')
+save_dict(orig_cid2edge, 'output/link_clustering/orig_cid2edge.pkl')
 
 # for the adaptive cut
-save_dict(newcid2cids, 'newcid2cids.pkl')
-save_dict(cid2edges, 'cid2edges.pkl')
-save_dict(cid2nodes, 'cid2nodes.pkl')
-save_dict(tmp_lst2, 'groups.pkl')
+save_dict(newcid2cids, 'output/link_clustering/newcid2cids.pkl')
+save_dict(cid2edges, 'output/link_clustering/cid2edges.pkl')
+save_dict(cid2nodes, 'output/link_clustering/cid2nodes.pkl')
+save_dict(tmp_lst2, 'output/link_clustering/groups.pkl')
 
 #%%

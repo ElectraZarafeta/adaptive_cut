@@ -1,7 +1,11 @@
 import networkx as nx
-from seaborn import color_palette, set_style, palplot
+from seaborn import color_palette
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
+import pickle
+import numpy
+from random import randint
+from helper_functions import *
 
 def create_color_map(G, attribute, seaborn_palette="colorblind"):
     """Return a list of hex color mappings for node attributes"""
@@ -39,22 +43,61 @@ def dendrogram_dens(linkage, orig_cid2edge, list_D_plot):
 
 #%%
 
-orig_cid2edge = {}
-for line in open('output/orig_cid2edge.txt'):
-    L = line.strip().split()
-    e0, e1 = L[1].split(',') 
-    orig_cid2edge[int(L[0])] = (int(e0), int(e1))
+orig_cid2edge = load_dict('output/link_clustering/orig_cid2edge.pkl')
+linkage = load_dict('output/link_clustering/linkage.pkl')
+list_D_plot = load_dict('output/link_clustering/list_D_plot.pkl')
 
-linkage = []
-for line in open('output/linkage.txt'):
-    L = line.strip().split()
-    linkage.append((int(L[0]), int(L[1]), float(L[2]), int(L[3])))
+#dendrogram_dens(linkage, orig_cid2edge, list_D_plot)
 
-list_D_plot = []
-for line in open('output/list_D_plot.txt'):
-    L = line.strip().split()
-    list_D_plot.append((float(L[0]), float(L[1])))
+#%%
 
-dendrogram_dens(linkage, orig_cid2edge, list_D_plot)
+best_partitions = load_dict('output/adaptive_cut/best_partitions.pkl')
+best_D = load_dict('output/adaptive_cut/best_D.pkl')
+cid2edges = load_dict('output/link_clustering/cid2edges.pkl')
+newcid2cids = load_dict('output/link_clustering/newcid2cids.pkl')
 
+linkage = numpy.array(linkage)
+best_partitions = sorted(best_partitions, reverse=True)
+
+#%%
+dflt_col = "#808080" 
+colors_lst = []
+D_leaf_colors = {}
+i = 0
+n = len(best_partitions)
+
+for j in range(n):
+    colors_lst.append('#%06X' % randint(0, 0xFFFFFF))
+
+for cid in cid2edges.keys():
+    if cid in best_partitions and cid <= len(linkage):
+        D_leaf_colors[cid] = colors_lst[i]
+        i += 1
+    else:
+        D_leaf_colors[cid] = dflt_col
+
+for key,value in newcid2cids.items():
+    value = list(value)
+    result = value.copy()
+    for item in result:
+        if newcid2cids.get(item):
+            result.extend(newcid2cids[item])
+    
+    if key in best_partitions:
+        for val in result:
+            D_leaf_colors[val] = colors_lst[i]
+        i += 1
+
+
+#%%
+
+link_cols = {}
+for i, i12 in enumerate(linkage[:,:2].astype(int)):
+  c1, c2 = (D_leaf_colors[x] for x in i12)
+  link_cols[i+1+len(linkage)] = c1
+
+
+fig = plt.figure(figsize=(50,50))
+dendrogram(Z=linkage, labels=list(orig_cid2edge.values()), link_color_func=lambda x: link_cols[x])
+plt.show()
 #%%

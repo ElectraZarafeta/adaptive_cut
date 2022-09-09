@@ -53,7 +53,7 @@ def read_edgelist_weighted(filename, delimiter=None):
     return dict(adj), edges, wij_dict
 
 # Step 1, 2
-adj, edges = read_edgelist_unweighted('lesmis/test.txt', '-')
+adj, edges = read_edgelist_unweighted('data/lesmis_unweighted.txt', '-')
 #adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
 
 #%%
@@ -172,7 +172,6 @@ for oms, edges in chain(similarities, [(1.0, (None, None))]):
         continue
 
     comm_id1, comm_id2 = edge2cid[edge1], edge2cid[edge2]
-
     
     if comm_id1 == comm_id2: # already merged!
         continue

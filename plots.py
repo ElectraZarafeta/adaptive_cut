@@ -39,7 +39,7 @@ def dendrogram_dens(linkage, orig_cid2edge, list_D_plot):
     plt.margins(0)
     plt.yticks([])
     
-    plt.savefig('output/imgs/output_unweighted.png')
+    plt.show() #savefig('output/imgs/output_unweighted.png')
 
 #%%
 
@@ -47,7 +47,7 @@ orig_cid2edge = load_dict('output/link_clustering/orig_cid2edge.pkl')
 linkage = load_dict('output/link_clustering/linkage.pkl')
 list_D_plot = load_dict('output/link_clustering/list_D_plot.pkl')
 
-#dendrogram_dens(linkage, orig_cid2edge, list_D_plot)
+dendrogram_dens(linkage, orig_cid2edge, list_D_plot)
 
 #%%
 
@@ -56,7 +56,7 @@ best_D = load_dict('output/adaptive_cut/best_D.pkl')
 cid2edges = load_dict('output/link_clustering/cid2edges.pkl')
 newcid2cids = load_dict('output/link_clustering/newcid2cids.pkl')
 
-linkage = numpy.array(linkage)
+linkage_new = numpy.array(linkage)
 best_partitions = sorted(best_partitions, reverse=True)
 
 #%%
@@ -92,9 +92,9 @@ for key,value in newcid2cids.items():
 #%%
 
 link_cols = {}
-for i, i12 in enumerate(linkage[:,:2].astype(int)):
+for i, i12 in enumerate(linkage_new[:,:2].astype(int)):
   c1, c2 = (D_leaf_colors[x] for x in i12)
-  link_cols[i+1+len(linkage)] = c1
+  link_cols[i+1+len(linkage_new)] = c1
 
 
 fig = plt.figure(figsize=(50,50))

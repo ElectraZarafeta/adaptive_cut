@@ -53,16 +53,16 @@ for group in groups:
     else:
         latest_partition_list = partition_list[-1]
 
-        # TEST
-        tmp=[]
-        for cid in group:
-            tmp = tmp + [key  for (key, value) in newcid2cids.items() if cid in value]
+        # # TEST
+        # tmp=[]
+        # for cid in group:
+        #     tmp = tmp + [key  for (key, value) in newcid2cids.items() if cid in value]
 
-        if not(all(p == tmp[0] for p in tmp)):
-            print('\nPROBLEM 2')
-            print(tmp)
-            print(group)
-            continue
+        # if not(all(p == tmp[0] for p in tmp)):
+        #     print('\nPROBLEM 2')
+        #     print(tmp)
+        #     print(group)
+        #     continue
 
         latest_partition_list = [c for c in latest_partition_list if c != belonging_cid]
 

@@ -96,6 +96,6 @@ for group in groups:
 
 #%%
 
-save_dict(best_D, 'output/adaptive_cut/best_D.pkl')
-save_dict(best_partitions, 'output/adaptive_cut/best_partitions.pkl')
+save_dict(best_D, 'output/greedy_algorithm/best_D.pkl')
+save_dict(best_partitions, 'output/greedy_algorithm/best_partitions.pkl')
 #%%

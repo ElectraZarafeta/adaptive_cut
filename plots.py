@@ -2,7 +2,6 @@ import networkx as nx
 from seaborn import color_palette
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
-import pickle
 import numpy
 from random import randint
 from helper_functions import *
@@ -51,8 +50,8 @@ dendrogram_dens(linkage, orig_cid2edge, list_D_plot)
 
 #%%
 
-best_partitions = load_dict('output/adaptive_cut/best_partitions.pkl')
-best_D = load_dict('output/adaptive_cut/best_D.pkl')
+best_partitions = load_dict('output/greedy_algorithm/best_partitions.pkl')
+best_D = load_dict('output/greedy_algorithm/best_D.pkl')
 cid2edges = load_dict('output/link_clustering/cid2edges.pkl')
 newcid2cids = load_dict('output/link_clustering/newcid2cids.pkl')
 

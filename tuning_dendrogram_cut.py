@@ -26,7 +26,7 @@ groups      = load_dict('output/link_clustering/groups.pkl')
 list_D_plot = load_dict('output/link_clustering/list_D_plot.pkl')
 linkage     = load_dict('output/link_clustering/linkage.pkl')
 
-similarity_value = max(list_D_plot,key=lambda item:item[0])[1]
+best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
 
 linkage_new = numpy.array(linkage)
 
@@ -37,45 +37,111 @@ M = 2/num_edges
 
 #%%
 
-for leader in leaders[:1]:
+# partitions = {}
+# part_density = {}
 
-    # Move one level up
-    partitions_up = []
+# for leader in leaders:
 
-    belonging_cid = [key  for (key, value) in newcid2cids.items() if leader in value][0]
+#     # Move one level up
+#     partitions_up = []
 
-    partitions_up = [leader_tmp for leader_tmp in leaders if leader_tmp not in newcid2cids[belonging_cid]]
-    partitions_up.append(belonging_cid)
+#     belonging_cid = [key  for (key, value) in newcid2cids.items() if leader in value][0]
 
-    ## Calculate partition density
-    D = partition_density(partitions_up)
+#     partitions_up = [leader_tmp for leader_tmp in leaders if leader_tmp not in newcid2cids[belonging_cid]]
+#     partitions_up.append(belonging_cid)
 
-    # Move one level down
-    partitions_down = [leader_tmp for leader_tmp in leaders if leader_tmp is not leader]
-    ## find childs
-    child = newcid2cids[leader][0]
-    partitions_down = partitions_down + [group for group in groups if child in group][0]
+#     ## Calculate partition density
+#     D_up = partition_density(partitions_up)
 
-    # Calculate partition density
-    D = partition_density(partitions_down)
+#     # Move one level down
+#     if leader < num_edges:
+#         partitions_down = []
+#         D_down = 0
+#     else:
+#         partitions_down = [leader_tmp for leader_tmp in leaders if leader_tmp is not leader]
+#         ## find childs
+#         child = newcid2cids[leader][0]
+#         partitions_down = partitions_down + [group for group in groups if child in group][0]
+
+#         # Calculate partition density
+#         D_down = partition_density(partitions_down)
+
+#     partitions[leader] = [leaders.tolist(), partitions_up, partitions_down]
+#     part_density[leader] = [best_D, D_up, D_down]
 
 
 #%%
 
+# Case : Find the best option (up/down/cut point) of the leader starting from the left
+#        keep the best and based on that calculate and evaluate the next leader
 
-# MOVE TO PLOTS.PY FILE
-# calculate labels
-labels=list('' for i in range(num_edges))
-for i in range(num_edges):
-    labels[i]=str(i)+ ',' + str(T[i])
+curr_partitions = [leaders.tolist()]
+partitions = {}
+part_density = {}
 
-k = numpy.unique(T, return_counts=True)[0][-1]
+#%%
 
-# calculate color threshold
-ct=linkage_new[-(k-1),2]  
+for i, leader in enumerate(leaders[:20]):
 
-#plot
-P =cluster.hierarchy.dendrogram(linkage_new,labels=labels,color_threshold=ct)
-plt.show()
+    print(leader)
+    partitions[leader]   = []
+    part_density[leader] = []
+
+    for curr_partition in curr_partitions:
+
+        # Best cut at the moment
+        partitions[leader].append(curr_partition)
+        part_density[leader].append(best_D)
+
+        # Move one level up
+        partitions_up = []
+
+        belonging_group = [group for group in groups if leader in group][0]
+
+        if len(set(leaders.tolist()[:i]).intersection(set(belonging_group))) <= 0:
+
+            belonging_cid = [key  for (key, value) in newcid2cids.items() if leader in value][0]
+
+            partitions_up = [leader_tmp for leader_tmp in curr_partition if leader_tmp not in newcid2cids[belonging_cid]]
+            partitions_up.append(belonging_cid)
+
+            ## Calculate partition density
+            D_up = partition_density(partitions_up)
+        
+        else:
+            D_up = 0
+
+        partitions[leader].append(partitions_up)
+        part_density[leader].append(D_up)
+
+        # Move one level down
+        partitions_down = []
+
+        if leader < num_edges:
+            D_down = 0
+        else:
+            partitions_down = [leader_tmp for leader_tmp in curr_partition if leader_tmp != leader]
+
+            ## find childs
+            child = newcid2cids[leader][0]
+            partitions_down = partitions_down + [group for group in groups if child in group][0]
+
+            # Calculate partition density
+            D_down = partition_density(partitions_down)
+        
+        partitions[leader].append(partitions_down)
+        part_density[leader].append(D_down)
+
+    best_D = max(part_density[leader])
+    print(best_D)
+
+    indexes = [k for k, val in enumerate(part_density[leader]) if val == best_D]
+    print(indexes)
+
+    curr_partitions = []
+    for index in indexes:
+        curr_partitions.append(partitions[leader][index])
+
+
 
 #%%

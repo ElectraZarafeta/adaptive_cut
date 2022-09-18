@@ -19,3 +19,8 @@ def Dc(m, n):
         return (m * (m - n + 1.0)) / ((n - 2.0) * (n - 1.0))
     except ZeroDivisionError:
         return 0.0
+
+def swap(a,b):
+    if a > b:
+        return b,a
+    return a,b

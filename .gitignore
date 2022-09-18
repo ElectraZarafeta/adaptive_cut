@@ -3,4 +3,6 @@ __pycache__
 .venv
 .devcontainer
 
+mlruns
+
 reading material

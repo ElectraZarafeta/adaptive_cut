@@ -5,11 +5,11 @@ from greedy_algorithm import *
 from plots import *
 import mlflow
 
-dataset = 'data/lesmis_unweighted.txt'
+dataset = 'data/facebook.txt'
 delimiter = '-'
-imgname_dt = 'lesmis'
+imgname_dt = 'fb'
 
-experiment_name = 'Les Miserables dataset'
+experiment_name = 'Facebook dataset'
 
 try:
     exp_id = mlflow.create_experiment(name=experiment_name)
@@ -23,10 +23,10 @@ def run_method(exp_id, method, imgname_dt, dataset, delimiter):
 
         mlflow.log_param("Method", method)
 
+        linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
+
         if method == "Link Clustering":
-
-            linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
-
+            
             best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
 
             imgname = imgname_dt+'_link_clustering_dendrogram'
@@ -52,7 +52,7 @@ def run_method(exp_id, method, imgname_dt, dataset, delimiter):
     mlflow.end_run()
 
 
-run_method(exp_id=exp_id, method='Greedy algorithm bottom', imgname_dt=imgname_dt, dataset=dataset, delimiter=delimiter)
+#run_method(exp_id=exp_id, method='Greedy algorithm bottom', imgname_dt=imgname_dt, dataset=dataset, delimiter=delimiter)
 
 #%%
 

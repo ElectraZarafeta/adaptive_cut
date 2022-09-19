@@ -36,17 +36,6 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
         else:
             latest_partition_list = partition_list[-1]
 
-            # # TEST
-            # tmp=[]
-            # for cid in group:
-            #     tmp = tmp + [key  for (key, value) in newcid2cids.items() if cid in value]
-
-            # if not(all(p == tmp[0] for p in tmp)):
-            #     print('\nPROBLEM 2')
-            #     print(tmp)
-            #     print(group)
-            #     continue
-
             latest_partition_list = [c for c in latest_partition_list if c != belonging_cid]
 
             current_group = latest_partition_list + group     
@@ -89,15 +78,18 @@ def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2edges, cid2
         Dc_list = []
 
         if len(set(group).intersection(removed_comm)) > 0:
-            belonging_cid = set([key  for (key, value) in newcid2cids.items() for i in group if i in value])
+            belonging_cid_lst = set([key for (key, value) in newcid2cids.items() if len(set(group).intersection(value)) > 0])
 
-            removed_comm = removed_comm + [key for (key, value) in newcid2cids.items() for i in value if i in belonging_cid]
+            removed_comm = list(removed_comm) + group + list(belonging_cid_lst) + [key for (key, value) in newcid2cids.items() if len(belonging_cid_lst.intersection(value)) > 0]
+            removed_comm = set(removed_comm)
 
             continue
 
-        belonging_cid = [key  for (key, value) in newcid2cids.items() if group[-1] in value][0]
+        belonging_cid = [key for (key, value) in newcid2cids.items() if group[-1] in value]
 
-        current_group = current_group + [belonging_cid]
+        belonging_cid_lst = set([key for (key, value) in newcid2cids.items() if len(set(group).intersection(value)) > 0])
+
+        current_group = current_group + belonging_cid
         current_group = [cid for cid in current_group if cid not in group]
 
         for cid in current_group:
@@ -112,8 +104,11 @@ def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2edges, cid2
             partition_list = partition_list[:-1]
             current_group = list(partition_list[-1])
 
-            removed_comm = removed_comm + [key for (key, value) in newcid2cids.items() if belonging_cid in value]
-        
+            belonging_cid_lst = set([key for (key, value) in newcid2cids.items() if len(set(group).intersection(value)) > 0])
+
+            removed_comm = list(removed_comm) + list(belonging_cid_lst) + [key for (key, value) in newcid2cids.items() if len(belonging_cid_lst.intersection(value)) > 0]
+            removed_comm = set(removed_comm)
+
         else:
             best_D.append(D)
             best_partitions = partition_list[-1]

@@ -2,6 +2,7 @@ from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
 from helper_functions import *
+import numpy as np
 
 # Create adjacency dictionary
 # and a set with all edges in the network
@@ -110,19 +111,15 @@ def initialize_edges(edges):
 
 
 # Single-linkage hierarchical clustering
-def single_linkage_HC(edges, similarities, is_grouped, edge2cid, cid2edges, cid2nodes, curr_maxcid):
+def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2edges, cid2nodes, curr_maxcid):
 
     linkage = [] # [(comm_id1, comm_id2, oms, num_edges)]
     D = 0.0 # partition density
 
     list_D = [(0.0, 1.0)] # (Partion density value, Similarity value)
     list_D_plot = [(0.0, 0.0)]
-    # best_D = 0.0
-    # best_S = 1.0
-    # best_P = None # partition P = {P1,...,Pc} of the links into C subsets, antistoixei sto dict edge2cid
     S_prev = -1.0
-    M = 2/len(edges)
-    # Dc_tmp = 0
+    M = 2/num_edges
     newcid2cids = {}
     groups_tmp, groups = [], []
 
@@ -147,19 +144,36 @@ def single_linkage_HC(edges, similarities, is_grouped, edge2cid, cid2edges, cid2
         
         if comm_id1 == comm_id2: # already merged!
             continue
+
+        if is_grouped[edge1] and is_grouped[edge2]:
+            groups_tmp.append(comm_id1)
+            groups_tmp.append(comm_id2)
+
         elif is_grouped[edge1]:
             groups_tmp.append(comm_id2)
             
         elif is_grouped[edge2]:
             groups_tmp.append(comm_id1)
-            
+
         else:
+            if len(groups_tmp) > 0:
+                groups.append(list(set(groups_tmp)))
             groups_tmp = []
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
-            if len(groups_tmp) != 0:
-                groups.append(groups_tmp)
             
+
+        # Ask Sune whether is correct to include it
+        # comm_lst = [comm_id1, comm_id2]
+
+        # for c in comm_lst:
+        #     if c > num_edges:
+        #         cids = newcid2cids[c]
+        #         for row in linkage_np:
+        #             if (int(row[0]) == cids[0] and int(row[1]) == cids[1]) or (int(row[1]) == cids[0] and int(row[0]) == cids[1]):
+        #                 if row[2] == oms:
+        #                     groups = [group for group in groups if cids[0] not in group]
+
 
         is_grouped[edge1] = True
         is_grouped[edge2] = True
@@ -184,10 +198,13 @@ def single_linkage_HC(edges, similarities, is_grouped, edge2cid, cid2edges, cid2
 
         linkage.append((comm_id1, comm_id2, oms, m))
 
+        #linkage_np = np.array(linkage)
+
         Dc12 = Dc(m, n)
         D += (Dc12 - Dc1 - Dc2) * M
 
     return linkage, list_D_plot, groups, newcid2cids
+
 
 def link_clustering(filename, delimiter):
     adj, edges = read_edgelist_unweighted(filename=filename, delimiter=delimiter)
@@ -197,9 +214,7 @@ def link_clustering(filename, delimiter):
 
     edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, is_grouped = initialize_edges(edges=edges)
 
-    linkage, list_D_plot, groups, newcid2cids = single_linkage_HC(edges=edges, similarities=similarities, is_grouped=is_grouped,\
-                                                                  edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes,\
-                                                                  curr_maxcid=curr_maxcid)
+    linkage, list_D_plot, groups, newcid2cids = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, is_grouped=is_grouped, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid)
 
     return linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, len(edges)
 

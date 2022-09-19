@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from scipy.cluster.hierarchy import *
+from scipy.cluster import *
 import numpy as np
 from random import randint
 from helper_functions import *
@@ -8,7 +8,7 @@ from helper_functions import *
 def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, imgname):
 
     linkage_np = np.array(linkage)
-    T = fcluster(linkage_np, t=similarity_value, criterion='distance')
+    T = hierarchy.fcluster(linkage_np, t=similarity_value, criterion='distance')
 
     labels=list('' for i in range(num_edges))
     for i in range(num_edges):
@@ -21,7 +21,7 @@ def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, imgname
 
     #plot
     plt.figure(figsize=(20,20))
-    dendrogram(linkage_np, labels=labels, color_threshold=ct)
+    hierarchy.dendrogram(linkage_np, labels=labels, color_threshold=ct)
     plt.axhline(y=similarity_value, c='k')
     plt.savefig('output/imgs/'+imgname+'.png')
     plt.close()
@@ -67,6 +67,6 @@ def dendrogram_greedy(linkage, best_partitions, cid2edges, newcid2cids, orig_cid
 
 
     plt.figure(figsize=(20,20))
-    dendrogram(Z=linkage, labels=list(orig_cid2edge.values()), link_color_func=lambda x: link_cols[x])
+    hierarchy.dendrogram(Z=linkage, labels=list(orig_cid2edge.values()), link_color_func=lambda x: link_cols[x])
     plt.savefig('output/imgs/'+imgname+'.png')
     plt.close()

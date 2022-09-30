@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.cluster import *
 import numpy as np
 from random import randint
@@ -69,4 +70,25 @@ def dendrogram_greedy(linkage, best_partitions, cid2edges, newcid2cids, orig_cid
     plt.figure(figsize=(20,20))
     hierarchy.dendrogram(Z=linkage, labels=list(orig_cid2edge.values()), link_color_func=lambda x: link_cols[x])
     plt.savefig('output/imgs/'+imgname+'.png')
+    plt.close()
+
+def tuning_metrics(list_D, list_clusters, threshold, imgname1, imgname2):
+
+    sns.set_style('darkgrid')
+    sns.set_palette('pastel')
+
+    p = sns.lineplot(x=list_D.keys(), y=list_D.values())
+    p.set(title='Partition density for each iteration')
+    p.set_xlabel('Iterations', fontsize=10)
+    p.set_ylabel('Partition density', fontsize=10)
+    plt.axvline(threshold, color='#AA4A44')
+    plt.text(threshold-5, max(list_D.values())-0.003, "Threshold", rotation='vertical', size='small', color='#AA4A44')
+    plt.savefig('output/imgs/'+imgname1+'.png')
+    plt.close()
+
+    p = sns.lineplot(x=list_clusters.keys(), y=list_clusters.values())
+    p.set(title='Number of clusters for each iteration')
+    p.set_xlabel('Iterations', fontsize=10)
+    p.set_ylabel('Number of Clusters', fontsize=10)
+    plt.savefig('output/imgs/'+imgname2+' .png')
     plt.close()

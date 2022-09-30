@@ -123,7 +123,7 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
     newcid2cids = {}
     groups_tmp, groups = [], []
 
-    for oms, edges in chain(similarities, [(1.0, (None, None))]):
+    for i, (oms, edges) in enumerate(chain(similarities, [(1.0, (None, None))])):
         sim = 1-oms
 
         if sim != S_prev:
@@ -138,6 +138,8 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
 
         edge1, edge2 = edges[0], edges[1]
         if not edge1 or not edge2: # We'll get (None, None) at the end of clustering
+            if len(groups_tmp) > 0:
+                groups.append(list(set(groups_tmp)))
             continue
 
         comm_id1, comm_id2 = edge2cid[edge1], edge2cid[edge2]
@@ -161,7 +163,6 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
             groups_tmp = []
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
-            
 
         # Ask Sune whether is correct to include it
         # comm_lst = [comm_id1, comm_id2]

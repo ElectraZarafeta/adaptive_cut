@@ -42,6 +42,9 @@ for member in tar.getmembers():
      f = tar.extractfile(member)
      if f is not None:
         content = f.read()
+        print(member)
+
+#%%
 
 content = content.decode('utf-8').replace(' ', '-')
 

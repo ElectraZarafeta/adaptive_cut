@@ -118,13 +118,13 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
 
     while True:
 
-        i += 1 
-
         curr_leader = random.choice(curr_partitions)
         curr_direction = random.choice(direction)
 
         if curr_leader not in leaders:
             continue
+
+        i += 1 
 
         if curr_direction == 'up':
             # Move one level up    
@@ -135,22 +135,18 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
             # Move one level down
 
             if curr_leader < num_edges:
-                continue
+                partitions_tmp, curr_D = curr_partitions, best_D
             else:
                 partitions_tmp, curr_D = calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, newcid2cids, groups, curr_partitions)
 
         previous_D = best_D
-
-        #logger.warning(f'Best partition density: {best_D}')
-        #logger.warning(f'Current partition density: {curr_D}')
+        
 
         if curr_D >= best_D:
             curr_partitions = partitions_tmp
             best_D = curr_D
             list_D[i] = best_D
             list_clusters[i] = len(curr_partitions)
-        elif curr_D == best_D:
-            list_D[i] = best_D
 
         if (i > threshold) and ((best_D - previous_D) < 0.01):
             early_stop += 1
@@ -160,6 +156,5 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
         if early_stop > stopping_threshold:
             break
 
-        #logger.warning(f'Best partition density: {best_D}')
 
     return list_D, list_clusters, curr_partitions

@@ -2,7 +2,6 @@ from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
 from helper_functions import *
-import numpy as np
 
 # Create adjacency dictionary
 # and a set with all edges in the network

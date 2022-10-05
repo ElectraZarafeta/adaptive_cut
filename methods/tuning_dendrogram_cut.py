@@ -100,7 +100,7 @@ def calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, newcid2cids
     return partitions, D
 
 
-def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups, num_edges, threshold, stopping_threshold):
+def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups, num_edges, threshold, stopping_threshold=None, montecarlo=False, epsilon=None):
 
     linkage_np = numpy.array(linkage)
     T = cluster.hierarchy.fcluster(linkage_np, t=similarity_value, criterion='distance')
@@ -124,7 +124,7 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
         if curr_leader not in leaders:
             continue
 
-        i += 1 
+        i += 1
 
         if curr_direction == 'up':
             # Move one level up    
@@ -147,14 +147,39 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
             best_D = curr_D
             list_D[i] = best_D
             list_clusters[i] = len(curr_partitions)
-
-        if (i > threshold) and ((best_D - previous_D) < 0.01):
-            early_stop += 1
         else:
-            early_stop = 0
+            if montecarlo:
+                a = random.uniform(0, 1)
 
-        if early_stop > stopping_threshold:
-            break
+                if i < threshold:
+                    epsilon_tmp = epsilon[0]
+                elif i < threshold*2:
+                    epsilon_tmp = epsilon[1]
+                elif i < threshold*3:
+                    epsilon_tmp = epsilon[2]
+                elif i < threshold*4:
+                    epsilon_tmp = epsilon[3]
+                elif i < threshold*5:
+                    epsilon_tmp = epsilon[4]
+                elif i < threshold*6:
+                    epsilon_tmp = epsilon[5]
+                else:
+                    break
+
+                if (a < epsilon_tmp) and ((best_D - curr_D) < 0.01):
+                    curr_partitions = partitions_tmp
+                    best_D = curr_D
+                    list_D[i] = best_D
+                    list_clusters[i] = len(curr_partitions)
+
+        if not montecarlo:
+            if (i > threshold): # and ((best_D - previous_D) < 0.01):
+                early_stop += 1
+            else:
+                early_stop = 0
+
+            if early_stop > stopping_threshold:
+                break
 
 
     return list_D, list_clusters, curr_partitions

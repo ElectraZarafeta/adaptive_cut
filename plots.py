@@ -1,9 +1,15 @@
+#%%
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
 import numpy as np
 from random import randint
 from helper_functions import *
+import networkx as nx
+from methods.link_clustering import link_clustering
+import igviz as ig
+from collections import defaultdict
+from logger import logger
 
 
 def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, main_path, imgname):
@@ -92,3 +98,125 @@ def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgnam
     p.set_ylabel('Number of Clusters', fontsize=10)
     plt.savefig(main_path+imgname2+'.png')
     plt.close()
+
+#%%
+
+
+# n = len(leaders)
+# node_color = {}
+# edge_color = {}
+# partition = [0 for _ in range(G.number_of_nodes())]
+# i = 1
+
+# for leader in leaders:
+#     if leader < num_edges:
+#         color = '#808080'
+
+#         # for n in cid2nodes[leader]:
+
+#         #     partition[n] = 0
+
+#         # color map
+#         node_color.update({node: color for node in cid2nodes[leader]})
+#         edge_color.update({edge: color for edge in cid2edges[leader]})
+
+#     else:
+#         color = '#%06X' % randint(0, 0xFFFFFF)
+
+#         value = newcid2cids[leader]
+#         value = list(value)
+#         result = value.copy()
+#         for item in result:
+#             if newcid2cids.get(item):
+#                 result.extend(newcid2cids[item])
+
+#         for val in result:
+#             if val < num_edges:
+#                 for n in cid2nodes[val]:
+#                     partition[n] = i
+
+#         i += 1
+
+#         # color map
+
+#         node_color.update({node: color for val in result for node in cid2nodes[val] if val < num_edges})
+#         edge_color.update({edge: color for val in result for edge in cid2edges[val] if val < num_edges})
+    
+
+# node_color = dict(sorted(node_color.items()))
+# edge_color = dict(sorted(edge_color.items()))
+# partition.sort()
+# #%%
+
+# def _inter_community_edges(G, partition):
+#     edges = defaultdict(list)
+
+#     for (i, j) in G.edges():
+#         c_i = partition[i]
+#         c_j = partition[j]
+
+#         if c_i == c_j:
+#             continue
+
+#         edges[(c_i, c_j)].append((i, j))
+
+#     return edges
+
+# def _position_communities(G, partition, **kwargs):
+#     hypergraph = nx.Graph()
+#     hypergraph.add_nodes_from(set(partition))
+
+#     inter_community_edges = _inter_community_edges(G, partition)
+#     for (c_i, c_j), edges in inter_community_edges.items():
+#         hypergraph.add_edge(c_i, c_j, weight=len(edges))
+
+#     pos_communities = nx.spring_layout(hypergraph, **kwargs)
+
+#     # Set node positions to positions of its community
+#     pos = dict()
+#     for node, community in enumerate(partition):
+#         pos[node] = pos_communities[community]
+
+#     return pos
+
+
+# def _position_nodes(G, partition, **kwargs):
+#     communities = defaultdict(list)
+#     for node, community in enumerate(partition):
+#         communities[community].append(node)
+
+#     pos = dict()
+#     for c_i, nodes in communities.items():
+#         subgraph = G.subgraph(nodes)
+#         pos_subgraph = nx.spring_layout(subgraph, **kwargs)
+#         pos.update(pos_subgraph)
+
+    
+
+#     return pos
+
+
+# # Adapted from: https://stackoverflow.com/questions/43541376/how-to-draw-communities-with-networkx
+# def community_layout(G, partition):
+#     pos_communities = _position_communities(G, partition, scale=10.0)
+#     pos_nodes = _position_nodes(G, partition, scale=5.0)
+
+#     # Combine positions
+#     pos = dict()
+#     for node in G.nodes():
+#         pos[node] = pos_communities[node] + pos_nodes[node]
+
+#     return pos
+
+
+
+# pos = community_layout(G, partition)
+
+# #%%
+
+# d = nx.degree(G)
+
+# plt.figure(figsize=(20,10))
+# nx.draw(G, node_color=list(node_color.values()), edge_color=list(edge_color.values()), alpha=0.8, node_size=[(d[node]+1) * 100 for node in G.nodes()])
+# plt.show()
+#%%

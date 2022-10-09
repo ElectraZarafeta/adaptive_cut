@@ -8,12 +8,17 @@ from methods.tuning_dendrogram_cut import *
 from plots import *
 import mlflow
 from logger import logger
+import os
 
-dataset = 'data/lesmis_unweighted.txt'
+experiment_name = 'Les Miserables'
+
+dataset = f'data/{experiment_name}.txt'
 delimiter = '-'
 
-experiment_name = 'Les Miserables dataset'
-main_path = 'output/imgs/lesmis/'
+main_path = f'output/imgs/{experiment_name}/'
+
+if not os.path.exists(main_path):
+    os.mkdir(main_path)
 
 try:
     exp_id = mlflow.create_experiment(name=experiment_name)
@@ -27,10 +32,14 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
 
         mlflow.log_param("Method", method)
 
+        # Baseline method - Link Clustering
         linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
         best_D_bl, similarity_value = max(list_D_plot,key=lambda item:item[0])
 
         if method == "Link Clustering":
+            T = hierarchy.fcluster(np.array(linkage), t=similarity_value, criterion='distance')
+            best_partitions = hierarchy.leaders(np.array(linkage), T)[0].tolist()
+
             best_D = best_D_bl
 
             imgname = 'link_clustering_dendrogram'
@@ -38,7 +47,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
 
         elif method == "Greedy algorithm up":
             best_D, best_partitions = greedy_up(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, linkage=linkage, cid2edges=cid2edges, cid2nodes=cid2nodes)
-            
+
             imgname = 'greedy_up_dendrogram'
             dendrogram_greedy(linkage=linkage, best_partitions=best_partitions, cid2edges=cid2edges, newcid2cids=newcid2cids, orig_cid2edge=orig_cid2edge, main_path=main_path, imgname=imgname) 
 
@@ -50,7 +59,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
 
         elif method == 'Turing dendrogram cut':
 
-            threshold = 5000 
+            threshold = 20000 
             stopping_threshold = 5
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, stopping_threshold=stopping_threshold)
@@ -64,11 +73,11 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
             imgname2 = f'clusters_{threshold}'
             tuning_metrics(list_D=list_D, list_clusters=list_clusters, threshold=threshold, main_path=main_path, imgname1=imgname1, imgname2=imgname2)
 
-            mlflow.log_metric('Threshold', threshold)
+            mlflow.log_param('Threshold', threshold)
 
         else:
 
-            threshold = 10000
+            threshold = 500
             epsilon = [0.2, 0.1, 0.05, 0.01, 0.001, 0]
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, montecarlo=True, epsilon=epsilon)
@@ -82,7 +91,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
             imgname2 = f'montecarlo_clusters_{threshold}'
             tuning_metrics(list_D=list_D, list_clusters=list_clusters, threshold=threshold, main_path=main_path, imgname1=imgname1, imgname2=imgname2)
 
-            mlflow.log_metric('Threshold', threshold)
+            mlflow.log_param('Threshold', threshold)
 
         mlflow.log_metric('Partition density', best_D)
 
@@ -94,14 +103,22 @@ def run_method(exp_id, method, main_path, dataset, delimiter):
 
     mlflow.end_run()
 
+    return best_partitions, best_D, num_edges, cid2edges, newcid2cids
 
-methods = ['Link Clustering', 'Greedy algorithm up', 'Greedy algorithm bottom', 'Turing dendrogram cut', 'Monte Carlo-turing dendrogram cut']
+    
+methods = ['Link Clustering', 'Greedy algorithm up', 'Greedy algorithm bottom', 'Turing dendrogram cut']#, 'Monte Carlo-turing dendrogram cut']
 
-run_method(exp_id=exp_id, method=methods[4], main_path=main_path, dataset=dataset, delimiter=delimiter)
+#run_method(exp_id=exp_id, method=methods[3], main_path=main_path, dataset=dataset, delimiter=delimiter)
 
 #%%
 
-for method in methods:
-    run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter)
+partitions = {}
+part_dens = {}
 
+for method in methods:
+    best_partitions, best_D, num_edges, cid2edges, newcid2cids = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter)
+    partitions[method] = best_partitions
+    part_dens[method] = best_D
+
+graph_plot(partitions, part_dens, dataset, delimiter, num_edges, cid2edges, newcid2cids, main_path)
 #%%

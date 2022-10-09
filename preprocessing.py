@@ -54,3 +54,39 @@ text_file.close()
 
 #%%
 
+# Star wars dataset
+
+import json
+
+f = open('data/raw data/starwars.json')
+
+data = json.load(f)
+txt = ''
+
+for i in data['links']:
+    source = i['source']
+    target = i['target']
+    txt += f'{source}-{target}\n'
+
+text_file = open("data/starwars.txt", "w")
+n = text_file.write(txt)
+text_file.close()
+
+#%%
+
+from bz2 import BZ2File as bzopen
+
+file = 'data/raw data/download.tsv.sociopatterns-infectious.tar.bz2'
+
+with bzopen(file, "r") as bzfin:
+    """ Handle lines here """
+    txt = ''
+    for line in bzfin:
+        txt += f'{line.rstrip()}\n'
+
+text_file = open("data/galleryprox.txt", "w")
+n = text_file.write(txt)
+text_file.close()
+
+#%%
+

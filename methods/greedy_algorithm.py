@@ -5,7 +5,7 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
     M = 2/num_edges
     groups.reverse()
     last_group = groups[0]
-    best_D = [0.0] # fix this
+    best_D = [0.0]
     partition_list, best_partitions, removed_comm = [], [], []
 
     for group in groups:

@@ -1,4 +1,5 @@
 #%%
+from tabnanny import verbose
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
@@ -6,10 +7,8 @@ import numpy as np
 from random import randint
 from helper_functions import *
 import networkx as nx
-from methods.link_clustering import link_clustering
-import igviz as ig
-from collections import defaultdict
 from logger import logger
+from fa2 import ForceAtlas2
 
 
 def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, main_path, imgname):
@@ -78,6 +77,7 @@ def dendrogram_greedy(linkage, best_partitions, cid2edges, newcid2cids, orig_cid
     plt.savefig(main_path+imgname+'.png')
     plt.close()
 
+
 def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgname2):
 
     sns.set_style('darkgrid')
@@ -99,124 +99,84 @@ def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgnam
     plt.savefig(main_path+imgname2+'.png')
     plt.close()
 
-#%%
 
+def graph_plot(partitions, part_dens, filename, delimiter, num_edges, cid2edges, newcid2cids, main_path):
 
-# n = len(leaders)
-# node_color = {}
-# edge_color = {}
-# partition = [0 for _ in range(G.number_of_nodes())]
-# i = 1
+    fig, axes = plt.subplots(1, len(list(partitions.keys())), figsize=(40, 15))
+    fig.subplots_adjust(hspace = 0.2, wspace = 1)
+    ax = axes.flatten()
+    logger.warning(f'ax {ax}')
 
-# for leader in leaders:
-#     if leader < num_edges:
-#         color = '#808080'
+    colors_dict = {}
+    for cid in newcid2cids.keys():
+        colors_dict[cid] = '#%06X' % randint(0, 0xFFFFFF)
+        
+    G = nx.read_edgelist(filename, delimiter=delimiter, nodetype=int)
 
-#         # for n in cid2nodes[leader]:
+    forceatlas2 = ForceAtlas2(
+                        # Behavior alternatives
+                        outboundAttractionDistribution=True,  # Dissuade hubs
+                        linLogMode=False,  # NOT IMPLEMENTED
+                        adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
+                        edgeWeightInfluence=1.0,
 
-#         #     partition[n] = 0
+                        # Performance
+                        jitterTolerance=10.0,  # Tolerance
+                        barnesHutOptimize=True,
+                        barnesHutTheta=1.2,
+                        multiThreaded=False,  # NOT IMPLEMENTED
 
-#         # color map
-#         node_color.update({node: color for node in cid2nodes[leader]})
-#         edge_color.update({edge: color for edge in cid2edges[leader]})
+                        # Tuning
+                        scalingRatio=100.0,
+                        strongGravityMode=False,
+                        gravity=0.2,
 
-#     else:
-#         color = '#%06X' % randint(0, 0xFFFFFF)
+                        # Log
+                        verbose=False)
 
-#         value = newcid2cids[leader]
-#         value = list(value)
-#         result = value.copy()
-#         for item in result:
-#             if newcid2cids.get(item):
-#                 result.extend(newcid2cids[item])
+    positions = forceatlas2.forceatlas2_networkx_layout(G, pos=None, iterations=2000)
 
-#         for val in result:
-#             if val < num_edges:
-#                 for n in cid2nodes[val]:
-#                     partition[n] = i
+    i = 0
 
-#         i += 1
+    for method in partitions.keys():
 
-#         # color map
+        edge_color = {}
+        leaders = partitions[method]
 
-#         node_color.update({node: color for val in result for node in cid2nodes[val] if val < num_edges})
-#         edge_color.update({edge: color for val in result for edge in cid2edges[val] if val < num_edges})
-    
+        for leader in leaders:
+            if leader < num_edges:
+                color = '#000000'
 
-# node_color = dict(sorted(node_color.items()))
-# edge_color = dict(sorted(edge_color.items()))
-# partition.sort()
-# #%%
+                # color map
+                edge_color.update({edge: color for edge in cid2edges[leader]})
 
-# def _inter_community_edges(G, partition):
-#     edges = defaultdict(list)
+            else:
+                color = colors_dict[leader]
 
-#     for (i, j) in G.edges():
-#         c_i = partition[i]
-#         c_j = partition[j]
+                value = newcid2cids[leader]
+                value = list(value)
+                result = value.copy()
+                for item in result:
+                    if newcid2cids.get(item):
+                        result.extend(newcid2cids[item])
 
-#         if c_i == c_j:
-#             continue
+                # color map
+                edge_color.update({edge: color for val in result for edge in cid2edges[val] if val < num_edges})
+            
 
-#         edges[(c_i, c_j)].append((i, j))
+        edge_color = dict(sorted(edge_color.items()))
 
-#     return edges
+        nx.draw_networkx_nodes(G, positions, node_size=5, with_labels=False, node_color="black", alpha=0.2, ax=ax[i])
+        nx.draw_networkx_edges(G, positions, edge_color=list(edge_color.values()), alpha=0.8, ax=ax[i])
 
-# def _position_communities(G, partition, **kwargs):
-#     hypergraph = nx.Graph()
-#     hypergraph.add_nodes_from(set(partition))
+        ax[i].set_title(f'{method}, {part_dens[method]:.2f}', fontsize=24)
+        ax[i].set_axis_off()
 
-#     inter_community_edges = _inter_community_edges(G, partition)
-#     for (c_i, c_j), edges in inter_community_edges.items():
-#         hypergraph.add_edge(c_i, c_j, weight=len(edges))
+        i += 1
 
-#     pos_communities = nx.spring_layout(hypergraph, **kwargs)
+    plt.savefig(main_path + 'graphs.png')
 
-#     # Set node positions to positions of its community
-#     pos = dict()
-#     for node, community in enumerate(partition):
-#         pos[node] = pos_communities[community]
-
-#     return pos
-
-
-# def _position_nodes(G, partition, **kwargs):
-#     communities = defaultdict(list)
-#     for node, community in enumerate(partition):
-#         communities[community].append(node)
-
-#     pos = dict()
-#     for c_i, nodes in communities.items():
-#         subgraph = G.subgraph(nodes)
-#         pos_subgraph = nx.spring_layout(subgraph, **kwargs)
-#         pos.update(pos_subgraph)
+        
 
     
-
-#     return pos
-
-
-# # Adapted from: https://stackoverflow.com/questions/43541376/how-to-draw-communities-with-networkx
-# def community_layout(G, partition):
-#     pos_communities = _position_communities(G, partition, scale=10.0)
-#     pos_nodes = _position_nodes(G, partition, scale=5.0)
-
-#     # Combine positions
-#     pos = dict()
-#     for node in G.nodes():
-#         pos[node] = pos_communities[node] + pos_nodes[node]
-
-#     return pos
-
-
-
-# pos = community_layout(G, partition)
-
-# #%%
-
-# d = nx.degree(G)
-
-# plt.figure(figsize=(20,10))
-# nx.draw(G, node_color=list(node_color.values()), edge_color=list(edge_color.values()), alpha=0.8, node_size=[(d[node]+1) * 100 for node in G.nodes()])
-# plt.show()
 #%%

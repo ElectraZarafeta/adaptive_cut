@@ -121,10 +121,14 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
         curr_leader = random.choice(curr_partitions)
         curr_direction = random.choice(direction)
 
+        if montecarlo:
+            i += 1
+
         if curr_leader not in leaders:
             continue
 
-        i += 1
+        if not montecarlo:
+            i += 1
 
         if curr_direction == 'up':
             # Move one level up    
@@ -166,14 +170,14 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
                 else:
                     break
 
-                if (a < epsilon_tmp) and ((best_D - curr_D) < 0.01):
+                if (a < epsilon_tmp): # and ((best_D - curr_D) < 0.01):
                     curr_partitions = partitions_tmp
                     best_D = curr_D
                     list_D[i] = best_D
                     list_clusters[i] = len(curr_partitions)
 
         if not montecarlo:
-            if (i > threshold): # and ((best_D - previous_D) < 0.01):
+            if (i > threshold) and ((best_D - previous_D) < 0.01):
                 early_stop += 1
             else:
                 early_stop = 0

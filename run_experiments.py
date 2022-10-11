@@ -114,7 +114,7 @@ for file in os.listdir('data/Oregon/'):
             return best_partitions, best_D, num_edges, cid2edges, newcid2cids
 
             
-        methods = ['Link Clustering', 'Greedy algorithm up', 'Greedy algorithm bottom', 'Turing dendrogram cut']#, 'Monte Carlo-turing dendrogram cut']
+        methods = ['Link Clustering', 'Greedy algorithm up', 'Greedy algorithm bottom', 'Tuning dendrogram cut']#, 'Monte Carlo-turing dendrogram cut']
 
         #best_partitions, best_D, num_edges, cid2edges, newcid2cids, groups = run_method(exp_id=exp_id, method=methods[0], main_path=main_path, dataset=dataset, delimiter=delimiter)
 

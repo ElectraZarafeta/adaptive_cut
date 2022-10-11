@@ -90,3 +90,76 @@ text_file.close()
 
 #%%
 
+
+file = 'data/raw data/galleryprox.txt'
+txt = ''
+
+for line in open(file):
+    L = line.strip().split(' ')
+    txt += f'{L[0][2:]}-{L[1]}\n'
+
+text_file = open("data/Gallery Proximity.txt", "w")
+n = text_file.write(txt)
+text_file.close()
+#%%
+
+import pandas as pd
+
+file = 'data/raw data/TrumpWorld Data — Public.xlsx'
+
+df = pd.read_excel(file)
+
+unique_vals = list(set(df['Entity A'].unique().tolist() + df['Entity B'].unique().tolist()))
+dict_labels = {}
+
+for i, val in enumerate(unique_vals):
+    dict_labels[val] = i
+
+df['edges'] = df.apply(lambda row: str(dict_labels[row['Entity A']])+'-'+str(dict_labels[row['Entity B']]), axis=1)
+
+df['edges'].to_csv('data/TrumpWorld.txt', header=None, index=None, sep='\n')
+
+#%%
+
+
+file = 'data/raw data/mol_yeast_spliceosome_2017.txt'
+txt = ''
+
+for i, line in enumerate(open(file)):
+    L = line.strip().split('\t')
+    tmp = [k for k in range(len(L)) if float(L[k]) != 0]
+    for k in tmp:
+        txt += f'{i}-{k}\n'
+
+text_file = open("data/Yeast spliceosome.txt", "w")
+n = text_file.write(txt)
+text_file.close()
+#%%
+
+import gzip
+import os
+
+for i, file in enumerate(os.listdir('data/raw data/Oregon/')):
+    f = os.path.join('data/raw data/Oregon/', file)
+    # checking if it is a file
+    if os.path.isfile(f):
+        txt = ''
+
+        with gzip.open(f,'rt') as fnew:
+            for line in fnew:
+                if line[0].isdigit():
+                    L = line.strip().split('\t')
+                    txt += f'{L[0]}-{L[1]}\n'
+
+        text_file = open(f"data/Oregon_{i}.txt", "w")
+        n = text_file.write(txt)
+        text_file.close()
+                
+
+#%%
+
+df = pd.read_excel('data/raw data/LabanderiaDunne2014DryadData.xls')
+
+df.head()
+
+#%%

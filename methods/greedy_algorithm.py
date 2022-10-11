@@ -1,4 +1,5 @@
 from helper_functions import *
+from logger import logger
 
 def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
 
@@ -18,7 +19,7 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
         if len(set(group).intersection(removed_comm)) > 0:
 
             for cid in group:
-                if cid <= len(linkage):
+                if cid < num_edges:
                     removed_comm = removed_comm + [cid]
                 else:
                     removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]

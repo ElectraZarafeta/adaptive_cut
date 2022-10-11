@@ -1,7 +1,10 @@
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
+import logging
 from helper_functions import *
+from logger import logger
+import numpy as np
 
 # Create adjacency dictionary
 # and a set with all edges in the network
@@ -146,34 +149,64 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
         if comm_id1 == comm_id2: # already merged!
             continue
 
+        # logging.warning(f'loop {i}')
+        # logging.warning(f'oms {oms}')
+        # logging.warning(f'edge1 {edge1}, edge2 {edge2}')
+        # logging.warning(f'comm1 {comm_id1}, comm2 {comm_id2}')
+
         if is_grouped[edge1] and is_grouped[edge2]:
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
 
+            # logging.warning('Case 1')
+
         elif is_grouped[edge1]:
+
+            # logging.warning('Case 2')
             groups_tmp.append(comm_id2)
-            
+
+            if comm_id1 > num_edges:
+                cids = newcid2cids[comm_id1]
+                for row in linkage_np:
+                    if (int(row[0]) == cids[0] and int(row[1]) == cids[1]) or (int(row[1]) == cids[0] and int(row[0]) == cids[1]):
+                        if row[2] == oms:
+                            groups_tmp.append(comm_id1)
+
+                            break
+
+
+            # if comm_id1 == 2830:
+            #     logger.warning(f'groups_tmp {groups_tmp}')
+
         elif is_grouped[edge2]:
+
+            # logging.warning('Case 3')
             groups_tmp.append(comm_id1)
 
+            if comm_id2 > num_edges:
+                cids = newcid2cids[comm_id2]
+                for row in linkage_np:
+                    if (int(row[0]) == cids[0] and int(row[1]) == cids[1]) or (int(row[1]) == cids[0] and int(row[0]) == cids[1]):
+                        if row[2] == oms:
+                            groups_tmp.append(comm_id2)
+
+                            break
+
+
         else:
+
+            # logging.warning('Case 4')
             if len(groups_tmp) > 0:
                 groups.append(list(set(groups_tmp)))
             groups_tmp = []
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
 
-        # Ask Sune whether is correct to include it
-        # comm_lst = [comm_id1, comm_id2]
 
-        # for c in comm_lst:
-        #     if c > num_edges:
-        #         cids = newcid2cids[c]
-        #         for row in linkage_np:
-        #             if (int(row[0]) == cids[0] and int(row[1]) == cids[1]) or (int(row[1]) == cids[0] and int(row[0]) == cids[1]):
-        #                 if row[2] == oms:
-        #                     groups = [group for group in groups if cids[0] not in group]
+        # if comm_id1 == 398 or comm_id2 == 398:
 
+
+        #     break
 
         is_grouped[edge1] = True
         is_grouped[edge2] = True
@@ -198,7 +231,7 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
 
         linkage.append((comm_id1, comm_id2, oms, m))
 
-        #linkage_np = np.array(linkage)
+        linkage_np = np.array(linkage)
 
         Dc12 = Dc(m, n)
         D += (Dc12 - Dc1 - Dc2) * M

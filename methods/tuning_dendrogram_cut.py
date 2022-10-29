@@ -1,6 +1,6 @@
 from helper_functions import *
 from scipy import cluster
-import numpy
+import numpy as np
 import random
 from logger import logger 
 
@@ -102,7 +102,7 @@ def calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, newcid2cids
 
 def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups, num_edges, threshold, stopping_threshold=None, montecarlo=False, epsilon=None):
 
-    linkage_np = numpy.array(linkage)
+    linkage_np = np.array(linkage)
     T = cluster.hierarchy.fcluster(linkage_np, t=similarity_value, criterion='distance')
     leaders = cluster.hierarchy.leaders(linkage, T)[0].tolist()
 

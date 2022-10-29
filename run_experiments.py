@@ -71,7 +71,6 @@ for file in os.listdir('data/Oregon/'):
                     list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, stopping_threshold=stopping_threshold)
 
 
-
                     best_D = list(list_D.values())[-1]
 
                     imgname = f'tuning_dendrogram_cut_{threshold}'
@@ -86,7 +85,7 @@ for file in os.listdir('data/Oregon/'):
                 else:
 
                     threshold = 500
-                    epsilon = [0.2, 0.1, 0.05, 0.01, 0.001, 0]
+                    epsilon = [0.2, 0.1, 0., 0.01, 0.001, 0]
 
                     list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, montecarlo=True, epsilon=epsilon)
 

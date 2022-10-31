@@ -148,20 +148,11 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
         if comm_id1 == comm_id2: # already merged!
             continue
 
-        # logging.warning(f'loop {i}')
-        # logging.warning(f'oms {oms}')
-        # logging.warning(f'edge1 {edge1}, edge2 {edge2}')
-        # logging.warning(f'comm1 {comm_id1}, comm2 {comm_id2}')
-
         if is_grouped[edge1] and is_grouped[edge2]:
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
 
-            # logging.warning('Case 1')
-
         elif is_grouped[edge1]:
-
-            # logging.warning('Case 2')
             groups_tmp.append(comm_id2)
 
             if comm_id1 > num_edges:
@@ -173,13 +164,8 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
 
                             break
 
-
-            # if comm_id1 == 2830:
-            #     logger.warning(f'groups_tmp {groups_tmp}')
-
         elif is_grouped[edge2]:
 
-            # logging.warning('Case 3')
             groups_tmp.append(comm_id1)
 
             if comm_id2 > num_edges:
@@ -191,21 +177,13 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
 
                             break
 
-
         else:
 
-            # logging.warning('Case 4')
             if len(groups_tmp) > 0:
                 groups.append(list(set(groups_tmp)))
             groups_tmp = []
             groups_tmp.append(comm_id1)
             groups_tmp.append(comm_id2)
-
-
-        # if comm_id1 == 398 or comm_id2 == 398:
-
-
-        #     break
 
         is_grouped[edge1] = True
         is_grouped[edge2] = True
@@ -239,6 +217,7 @@ def single_linkage_HC(edges, num_edges, similarities, is_grouped, edge2cid, cid2
 
 
 def link_clustering(filename, delimiter):
+
     adj, edges = read_edgelist_unweighted(filename=filename, delimiter=delimiter)
     #adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
 

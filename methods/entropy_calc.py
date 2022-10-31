@@ -1,6 +1,7 @@
 import math
 from scipy.cluster import hierarchy
 import numpy as np
+import fastcluster
 
 def entropy_calc(linkage, newcid2cids, num_edges):
 
@@ -39,9 +40,6 @@ def entropy_calc(linkage, newcid2cids, num_edges):
 
             logs.append(abs(probj*math.log(probj)))
 
-        if max(logs)==0:
-            E.append(float('inf'))
-        else:
-            E.append(sum(logs)/max(logs))
+        E.append(sum(logs)/max(logs))
 
     return E

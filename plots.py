@@ -9,6 +9,9 @@ from helper_functions import *
 import networkx as nx
 from logger import logger
 from fa2 import ForceAtlas2
+import sys
+
+sys.setrecursionlimit(10000)
 
 
 def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, main_path, imgname):
@@ -166,7 +169,7 @@ def graph_plot(partitions, part_dens, filename, delimiter, num_edges, cid2edges,
 
         edge_color = dict(sorted(edge_color.items()))
 
-        nx.draw_networkx_nodes(G, positions, node_size=5, with_labels=False, node_color="black", alpha=0.2, ax=ax[i])
+        nx.draw_networkx_nodes(G, positions, node_size=5, node_color="black", alpha=0.2, ax=ax[i])
         nx.draw_networkx_edges(G, positions, edge_color=list(edge_color.values()), alpha=0.8, ax=ax[i])
 
         ax[i].set_title(f'{method}, {part_dens[method]:.2f}', fontsize=24)
@@ -176,7 +179,13 @@ def graph_plot(partitions, part_dens, filename, delimiter, num_edges, cid2edges,
 
     plt.savefig(main_path + 'graphs.png')
 
-        
+
+def entropy_plot(entropy, main_path):
+
+    plt.plot(entropy)
+    plt.savefig(main_path + 'entropy.png')
+
+
 
     
 #%%

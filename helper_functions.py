@@ -1,4 +1,5 @@
 import pickle
+from random import randint
 
 def save_dict(dictname, filename):
     f = open(filename,"wb")
@@ -24,3 +25,11 @@ def swap(a,b):
     if a > b:
         return b,a
     return a,b
+
+def color_dict(cid2edges):
+    colors_dict = {}
+
+    for cid in cid2edges.keys():
+        colors_dict[cid] = '#%06X' % randint(0, 0xFFFFFF)
+
+    return colors_dict

@@ -2,10 +2,16 @@
 import mlflow
 import pandas as pd
 import plotly.express as px
+import seaborn as sns
+import functools as ft
+import matplotlib.pyplot as plt
+
+def min_max_scaling(series):
+    return (series - series.min()) / (series.max() - series.min())
 
 df = pd.DataFrame()
 
-for i in range(8):
+for i in range(48):
 
     experiment_id = f'{i}'
 
@@ -13,51 +19,83 @@ for i in range(8):
     
     df = df.append(runs)
 
-#%%
+df = df[df.status == 'FINISHED']
 
 df = df[['run_id', 'experiment_id', 'metrics.Partition density', 'params.Threshold', 'params.Method']]
 
+link_clust = df.loc[df['params.Method'] == 'Link Clustering', ['metrics.Partition density', 'experiment_id']].reset_index(drop=True).rename(columns={'metrics.Partition density': 'Link Clustering'})
+greedy_up = df.loc[df['params.Method'] == 'Greedy algorithm up', ['metrics.Partition density', 'experiment_id']].reset_index(drop=True).rename(columns={'metrics.Partition density': 'Greedy algorithm up'})
+greedy_bottom = df.loc[df['params.Method'] == 'Greedy algorithm bottom', ['metrics.Partition density', 'experiment_id']].reset_index(drop=True).rename(columns={'metrics.Partition density': 'Greedy algorithm bottom'})
+tune = df.loc[df['params.Method'] == 'Tuning dendrogram cut', ['metrics.Partition density', 'experiment_id']].reset_index(drop=True).rename(columns={'metrics.Partition density': 'Tuning dendrogram cut'})
+
+dfs = [link_clust, greedy_up, greedy_bottom, tune]
+df_final = ft.reduce(lambda left, right: pd.merge(left, right, on='experiment_id'), dfs)
 #%%
 
-df_pivot = df.pivot(index='experiment_id', columns='params.Method', values='metrics.Partition density')
-df_pivot
+# Plot the distribution of the normalized partition density
+df_tmp = df_final[['Greedy algorithm bottom', 'Greedy algorithm up', 'Tuning dendrogram cut', 'Link Clustering']]
+df_tmp = df_tmp.melt()
+df_tmp['value'] = min_max_scaling(df_tmp['value'])
+
+sns.kdeplot(df_tmp.loc[(df_tmp['variable']=='Greedy algorithm bottom'),
+            'value'], color='r', shade=True, label='Greedy algorithm bottom')
+  
+sns.kdeplot(df_tmp.loc[(df_tmp['variable']=='Greedy algorithm up'),
+            'value'], color='b', shade=True, label='Greedy algorithm up')
+
+sns.kdeplot(df_tmp.loc[(df_tmp['variable']=='Tuning dendrogram cut'),
+            'value'], color='g', shade=True, label='Tuning dendrogram cut')
+
+sns.kdeplot(df_tmp.loc[(df_tmp['variable']=='Link Clustering'),
+            'value'], color='y', shade=True, label='Link Clustering')
+  
+plt.xlabel('Partition density')
+plt.ylabel('Probability Density')
 #%%
 
-df_pivot['Greedy bottom - LC'] = df_pivot['Greedy algorithm bottom'] - df_pivot['Link Clustering']
-df_pivot['Greedy up - LC'] = df_pivot['Greedy algorithm up'] - df_pivot['Link Clustering']
-df_pivot['Tuning - LC'] = df_pivot['Turing dendrogram cut'] - df_pivot['Link Clustering']  # fix to Tuning
-df_pivot
+df_final['Greedy bottom - LC'] = df_final['Greedy algorithm bottom'] - df_final['Link Clustering']
+df_final['Greedy up - LC'] = df_final['Greedy algorithm up'] - df_final['Link Clustering']
+df_final['Tuning - LC'] = df_final['Tuning dendrogram cut'] - df_final['Link Clustering'] 
+df_final = df_final[['Greedy bottom - LC', 'Greedy up - LC', 'Tuning - LC']]
+
+# Boxplot
+df_final.boxplot()
+
+# Plot the distribution of the difference between each method and the baseline model
+df_melt = df_final.melt()
+
+sns.kdeplot(df_melt.loc[(df_melt['variable']=='Greedy bottom - LC'),
+            'value'], color='r', shade=True, label='Greedy bottom - LC')
+  
+plt.xlabel('Improvement')
+plt.ylabel('Probability Density')
+
+sns.kdeplot(df_melt.loc[(df_melt['variable']=='Greedy up - LC'),
+            'value'], color='b', shade=True, label='Greedy up - LC')
+  
+plt.xlabel('Improvement')
+plt.ylabel('Probability Density')
+
+sns.kdeplot(df_melt.loc[(df_melt['variable']=='Tuning - LC'),
+            'value'], color='g', shade=True, label='Tuning - LC')
+  
+plt.xlabel('Improvement')
+plt.ylabel('Probability Density')
+
 #%%
 
-import plotly.figure_factory as ff
+dt = {'method': ['Greedy bottom', 'Greedy up', 'Tuning'], 
+    'freq of improvement': [len(df_final[df_final['Greedy bottom - LC'] > 0])/df_final.shape[0],
+                            len(df_final[df_final['Greedy up - LC'] > 0])/df_final.shape[0],
+                            len(df_final[df_final['Tuning - LC'] > 0])/df_final.shape[0]],
+    'freq of decrease': [len(df_final[df_final['Greedy bottom - LC'] < 0])/df_final.shape[0],
+                            len(df_final[df_final['Greedy up - LC'] < 0])/df_final.shape[0],
+                            len(df_final[df_final['Tuning - LC'] < 0])/df_final.shape[0]]}
 
+freq = pd.DataFrame(dt)
 
-hist_data = [df_pivot['Greedy bottom - LC'].to_numpy(), df_pivot['Greedy up - LC'].to_numpy(), df_pivot['Tuning - LC'].to_numpy()]
-group_labels = ['Greedy algorithm bottom', 'Greedy algorithm up', 'Turing dendrogram cut'] # name of the dataset
+ax = freq.plot(x="method", y="freq of improvement", kind="bar")
 
-fig = ff.create_distplot(hist_data, group_labels, bin_size=.1)
-fig.show()
+freq.plot(x="method", y="freq of decrease", kind="bar", ax=ax, color='red')
 
-#%%
-
-hist_data = [df_pivot['Greedy bottom - LC'].to_numpy()]
-group_labels = ['Greedy algorithm bottom'] # name of the dataset
-
-fig = ff.create_distplot(hist_data, group_labels, bin_size=.1)
-fig.show()
-#%%
-
-hist_data = [df_pivot['Greedy up - LC'].to_numpy()]
-group_labels = ['Greedy algorithm up'] # name of the dataset
-
-fig = ff.create_distplot(hist_data, group_labels, bin_size=.05)
-fig.show()
 # %%
-
-hist_data = [df_pivot['Tuning - LC'].to_numpy()]
-group_labels = ['Tuning dendrogram cut'] # name of the dataset
-
-fig = ff.create_distplot(hist_data, group_labels, bin_size=.05)
-fig.show()
-
-#%%

@@ -190,10 +190,12 @@ def entropy_plot(entropy, main_path):
     sns.set_style('darkgrid')
     sns.set_palette('pastel')
 
-    p = sns.lineplot(x=entropy.keys(), y=entropy.values())
-    p.set(title='Entropy at each level')
-    p.set_xlabel('Level', fontsize=10)
-    p.set_ylabel('Entropy', fontsize=10)
+    plt.plot(entropy.values(), entropy.keys())
+    plt.gca().invert_yaxis()
+    #sns.lineplot(x=entropy.values(), y=entropy.keys())
+    plt.title('Entropy at each level')
+    plt.xlabel('Entropy', fontsize=10)
+    plt.ylabel('Level', fontsize=10)
     plt.savefig(main_path+'entropy.png')
     plt.close()
 

@@ -1,16 +1,12 @@
 #%%
-from tabnanny import verbose
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
 import numpy as np
-from random import randint
-from helper_functions import *
 import networkx as nx
 from logger import logger
 from fa2 import ForceAtlas2
 import sys
-import os
 
 sys.setrecursionlimit(10000)
 
@@ -185,17 +181,17 @@ def graph_plot(partitions, part_dens, filename, delimiter, num_edges, colors_dic
     plt.close()
 
 
-def entropy_plot(entropy, main_path):
+def entropy_plot(entropy, max_entropy, main_path):
 
+    import matplotlib.pyplot as plt
     sns.set_style('darkgrid')
     sns.set_palette('pastel')
 
-    plt.plot(entropy.values(), entropy.keys())
-    plt.gca().invert_yaxis()
-    #sns.lineplot(x=entropy.values(), y=entropy.keys())
+    plt.plot(entropy.keys(), entropy.values(), color='black')
+    plt.plot(max_entropy.keys(), max_entropy.values(), color='blue')
     plt.title('Entropy at each level')
-    plt.xlabel('Entropy', fontsize=10)
-    plt.ylabel('Level', fontsize=10)
+    #plt.ylabel('Entropy', fontsize=10)
+    plt.xlabel('Level', fontsize=10)
     plt.savefig(main_path+'entropy.png')
     plt.close()
 

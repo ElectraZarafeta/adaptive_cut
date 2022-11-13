@@ -119,14 +119,22 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
     while True:
 
         curr_leader = random.choice(curr_partitions)
-        curr_direction = random.choice(direction)
+
+        # logger.warning(curr_leader)
+        # logger.warning(curr_direction)
 
         if curr_leader not in leaders:
+            # logger.warning('Curr leader not in leaders')
             continue
+
+        curr_direction = random.choice(direction)
 
         i += 1
 
+        # logger.warning(f'Current iter {i}')
+
         if curr_direction == 'up':
+
             # Move one level up    
 
             partitions_tmp, curr_D = calc_partdens_up(curr_leader, num_edges, cid2edges, cid2nodes, newcid2cids, curr_partitions)
@@ -141,7 +149,6 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
 
         previous_D = best_D
 
-
         if curr_D >= best_D:
             curr_partitions = partitions_tmp
             best_D = curr_D
@@ -151,22 +158,30 @@ def tune_cut(linkage, similarity_value, best_D, cid2edges, cid2nodes, newcid2cid
             if montecarlo:
                 a = random.uniform(0, 1)
 
-                if i < threshold:
+                if i <= threshold[0]:
                     epsilon_tmp = epsilon[0]
-                elif i < threshold*2:
+                elif i <= (threshold[0]*2):
                     epsilon_tmp = epsilon[1]
-                elif i < threshold*3:
+                elif i <= (threshold[0]*2 + threshold[1]):
                     epsilon_tmp = epsilon[2]
-                elif i < threshold*4:
+                elif i <= (threshold[0]*2 + threshold[1]*2):
                     epsilon_tmp = epsilon[3]
-                elif i < threshold*5:
+                elif i <= (threshold[0]*2 + threshold[1]*3):
                     epsilon_tmp = epsilon[4]
-                elif i < threshold*6:
+                elif i <= (threshold[0]*2 + threshold[1]*4):
                     epsilon_tmp = epsilon[5]
+                elif i <= (threshold[0]*2 + threshold[1]*5):
+                    epsilon_tmp = epsilon[6]
                 else:
                     break
 
-                if (a < epsilon_tmp): # and ((best_D - curr_D) < 0.01):
+                # logger.warning(a)
+                # logger.warning(epsilon_tmp)
+                # logger.warning(previous_D)
+                # logger.warning(best_D)
+                # logger.warning(curr_D)
+
+                if (a < epsilon_tmp) and ((best_D - curr_D) < 0.001): #0.01
                     curr_partitions = partitions_tmp
                     best_D = curr_D
                     list_D[i] = best_D

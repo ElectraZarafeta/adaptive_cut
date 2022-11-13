@@ -21,6 +21,10 @@ for i in range(48):
 
 df = df[df.status == 'FINISHED']
 
+#%%
+
+# Use starttime endtime to calculate the duration and combine it with dt size to make plots
+
 df = df[['run_id', 'experiment_id', 'metrics.Partition density', 'params.Threshold', 'params.Method']]
 
 link_clust = df.loc[df['params.Method'] == 'Link Clustering', ['metrics.Partition density', 'experiment_id']].reset_index(drop=True).rename(columns={'metrics.Partition density': 'Link Clustering'})

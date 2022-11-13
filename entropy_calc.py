@@ -10,10 +10,13 @@ from collections import defaultdict
 def entropy_calc(linkage, newcid2cids, num_edges):
 
     linkage_np = np.array(linkage)
-    similarity_vals = sorted(set(linkage_np[:,2].tolist()), reverse=True)
+    similarity_vals = sorted(set(linkage_np[:,2].tolist()), ) #reverse=True)
 
     total_leaves = num_edges
-    E = {}
+    E, max_E = {}, {}
+
+    E[0] = math.log(num_edges, 2)
+    max_E[0] = math.log(num_edges, 2)
 
     for i, val in enumerate(similarity_vals):
 
@@ -39,39 +42,28 @@ def entropy_calc(linkage, newcid2cids, num_edges):
                 
             probj = num_leaves/total_leaves
             logs += -(probj * math.log(probj, 2))
-            #logs.append(-(probj * math.log(probj, 2)))
 
-        # if max(logs) == 0:
-        #     continue
-        # else:
-        #     E[i+1] = sum(logs)/max(logs)
-        E[i] = logs #/len(curr_partitions)
+        E[i] = logs
+        max_E[i] = math.log(len(curr_partitions), 2)
 
-    logs = 0
+    div = [v/max_E[k] for k, v in E.items() if k != (len(E)-1)]
+    avg_div = sum(div)/len(div)
 
-    for c in range(num_edges):
-        num_leaves = 1
+    sub = [max_E[k]-v for k, v in E.items() if k != (len(E)-1)]
+    avg_sub = sum(sub)/len(sub)
 
-        probj = num_leaves/total_leaves
-        logs += -(probj * math.log(probj, 2))
+    return E, max_E, div, avg_div, sub, avg_sub 
 
-    E[i+1] = logs #/num_edges
-        
-    max_E = max(E.values())
+# dataset = f'data/STEM concept networks Researchers.txt'
+# delimiter = '-'
+# main_path = 'output/'
 
-    E_n = {key:value/max_E for key,value in E.items()} 
-    #collections.OrderedDict(sorted(E_n.items()))
-    #E_n.update({i+1:1.0})
+# linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
 
-    return E
-
-dataset = f'data/TrumpWorld.txt'
-delimiter = '-'
-main_path = 'output/'
-
-linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
-
-entropy = entropy_calc(linkage, newcid2cids, num_edges)
-entropy_plot(entropy, main_path)
-
-#%%
+# entropy, max_entropy = entropy_calc(linkage, newcid2cids, num_edges)
+# #%%
+# div = [v/max_entropy[k] for k, v in entropy.items() if k != len(entropy)-1]
+# sum(div)/len(div)
+# #%%
+# entropy_plot(entropy, max_entropy, main_path)
+# #%%

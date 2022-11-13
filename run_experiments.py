@@ -1,7 +1,7 @@
 #%%
 # mlflow server --host 0.0.0.0 --port 8888
 
-from methods.link_clustering import link_clustering
+from methods.link_clustering import *
 from methods.greedy_algorithm import *
 from methods.tuning_dendrogram_cut import *
 from entropy_calc import *
@@ -12,7 +12,7 @@ import os
 import shutil
 
 
-def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, groups=None):
+def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, groups=None, num_edges=None, linkage=None, newcid2cids=None, cid2edges=None, cid2nodes=None, orig_cid2edge=None, best_D_LC=None, similarity_LC=None):
 
     with mlflow.start_run(experiment_id=exp_id):
 
@@ -22,14 +22,14 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
         # Baseline method - Link Clustering
         if method == "Link Clustering":
 
-            linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
-            best_D_bl, similarity_value = max(list_D_plot,key=lambda item:item[0])
+            linkage_tmp, list_D_plot, newcid2cids_tmp, orig_cid2edge_tmp, cid2edges_tmp, cid2nodes_tmp, num_edges_tmp = link_clustering(filename=dataset, delimiter=delimiter)
+            best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
 
-            colors_dict_tmp = color_dict(cid2edges)
-            groups_gen = groups_generator(linkage, newcid2cids, num_edges)
+            colors_dict_tmp = color_dict(cid2edges_tmp)
+            groups_gen = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp)
 
             # Entropy calculations
-            entropy, max_entropy, div, avg_div, sub, avg_sub = entropy_calc(linkage, newcid2cids, num_edges)
+            entropy, max_entropy, div, avg_div, sub, avg_sub = entropy_calc(linkage_tmp, newcid2cids_tmp, num_edges_tmp)
             entropy_plot(entropy, max_entropy, main_path)
             mlflow.log_artifact(main_path+'entropy.png')
             mlflow.log_metric('Avg- Real entropy div Max entropy', avg_div)
@@ -37,23 +37,21 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             mlflow.log_text(str(div), 'Real entropy div Max entropy.txt')
             mlflow.log_text(str(sub), 'Max entropy sub Real entropy.txt')
             
-            T = hierarchy.fcluster(np.array(linkage), t=similarity_value, criterion='distance')
-            best_partitions = hierarchy.leaders(np.array(linkage), T)[0].tolist()
-
-            best_D = best_D_bl
+            T = hierarchy.fcluster(np.array(linkage_tmp), t=similarity_value, criterion='distance')
+            best_partitions = hierarchy.leaders(np.array(linkage_tmp), T)[0].tolist()
 
             imgname = 'link_clustering_dendrogram'
-            dendrogram_plot(num_edges=num_edges, linkage=linkage, similarity_value=similarity_value, orig_cid2edge=orig_cid2edge, newcid2cids=newcid2cids, cid2edges=cid2edges, colors_dict=colors_dict_tmp, main_path=main_path, imgname=imgname)
+            dendrogram_plot(num_edges=num_edges_tmp, linkage=linkage_tmp, similarity_value=similarity_value, orig_cid2edge=orig_cid2edge_tmp, newcid2cids=newcid2cids_tmp, cid2edges=cid2edges_tmp, colors_dict=colors_dict_tmp, main_path=main_path, imgname=imgname)
 
         elif method == "Greedy algorithm up":
-            best_D, best_partitions = greedy_up(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, linkage=linkage, cid2edges=cid2edges, cid2nodes=cid2nodes)
+            best_D, best_partitions = greedy_up(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes)
 
             imgname = 'greedy_up_dendrogram'
             dendrogram_greedy(linkage=linkage, best_partitions=best_partitions, cid2edges=cid2edges, newcid2cids=newcid2cids, orig_cid2edge=orig_cid2edge, colors_dict=colors_dict, main_path=main_path, imgname=imgname) 
 
         elif method == "Greedy algorithm bottom":
             best_D, best_partitions = greedy_bottom(num_edges=num_edges, groups=groups, orig_cid2edge=orig_cid2edge, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes)
-
+            
             imgname = 'greedy_bottom_dendrogram'
             dendrogram_greedy(linkage=linkage, best_partitions=best_partitions, cid2edges=cid2edges, newcid2cids=newcid2cids, orig_cid2edge=orig_cid2edge, colors_dict=colors_dict, main_path=main_path, imgname=imgname)
 
@@ -62,7 +60,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             threshold = 5000 # ?? 
             stopping_threshold = 5
 
-            list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, stopping_threshold=stopping_threshold)
+            list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, stopping_threshold=stopping_threshold)
 
 
             best_D = list(list_D.values())[-1]
@@ -81,7 +79,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             threshold = [1000, 500]
             epsilon = [0.3, 0.2, 0.1, 0.05, 0.01, 0.001, 0]
 
-            list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_value, best_D=best_D_bl, threshold=threshold, montecarlo=True, epsilon=epsilon)
+            list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, montecarlo=True, epsilon=epsilon)
 
             best_D = list(list_D.values())[-1]
 
@@ -107,12 +105,12 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             mlflow.log_artifact(main_path+imgname2+'.png')
 
     mlflow.end_run()
-
+    
 
     if method == 'Link Clustering':
-        return best_partitions, best_D, num_edges, cid2edges, newcid2cids, colors_dict_tmp, groups_gen
+        return best_partitions, best_D, similarity_value, num_edges_tmp, linkage_tmp, orig_cid2edge_tmp, cid2nodes_tmp, cid2edges_tmp, newcid2cids_tmp, colors_dict_tmp, groups_gen
     else:
-        return best_partitions, best_D, num_edges, cid2edges, newcid2cids
+        return best_partitions, best_D
 
 length = len(os.listdir('data/'))
 
@@ -151,19 +149,20 @@ for step, file in enumerate(os.listdir('data/')):
 
             method = 'Link Clustering'
             logger.warning(f'Running method: {method}')
-            best_partitions, best_D, num_edges, cid2edges, newcid2cids, colors_dict, groups = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter)
+            partitions[method], part_dens[method], similarity_value, num_edges, linkage, orig_cid2edge, cid2nodes, cid2edges, newcid2cids, colors_dict, groups = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter)
             logger.warning(f'Method done!')
-            partitions[method] = best_partitions
-            part_dens[method] = best_D
 
             methods = ['Greedy algorithm up', 'Greedy algorithm bottom', 'Tuning dendrogram cut', 'Monte Carlo-tuning dendrogram cut']
 
-            for method in methods[:3]:
+            for method in methods[:2]:
                 logger.warning(f'Running method: {method}')
-                best_partitions, best_D, num_edges, cid2edges, newcid2cids = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups)
+                partitions[method], part_dens[method] = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups, num_edges=num_edges, linkage=linkage, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, orig_cid2edge=orig_cid2edge)
                 logger.warning(f'Method done!')
-                partitions[method] = best_partitions
-                part_dens[method] = best_D
+
+            # for method in methods[2:]:
+            #     logger.warning(f'Running method: {method}')
+            #     partitions[method], part_dens[method] = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups, num_edges=num_edges, linkage=linkage, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, orig_cid2edge=orig_cid2edge, best_D_LC=part_dens['Link Clustering'], similarity_LC=similarity_value)
+            #     logger.warning(f'Method done!')
 
             graph_plot(partitions, part_dens, dataset, delimiter, num_edges, colors_dict, cid2edges, newcid2cids, main_path)
 

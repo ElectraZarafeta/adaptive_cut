@@ -1,17 +1,17 @@
 from helper_functions import *
 from logger import logger
-from link_clustering import *
-from plots import *
+import copy
 
-def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
+def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
 
     M = 2/num_edges
-    groups.reverse()
-    last_group = groups[0]
+    groups_r = copy.deepcopy(groups)
+    groups_r.reverse()
+    last_group = groups_r[0]
     best_D = [0.0]
     partition_list, best_partitions, removed_comm, belonging_cid_removed = [], [], [], []
 
-    for group in groups:
+    for group in groups_r:
 
         Dc_list = []
 
@@ -27,7 +27,7 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
                 else:
                     removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
             
-            add_removed_comm = [val for val in group for group in groups if set(group) & set(removed_comm)]
+            add_removed_comm = [val for val in group for group in groups_r if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))
             
             continue
@@ -41,7 +41,7 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
                 else:
                     removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
             
-            add_removed_comm = [val for val in group for group in groups if set(group) & set(removed_comm)]
+            add_removed_comm = [val for val in group for group in groups_r if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))
             
             continue
@@ -75,7 +75,7 @@ def greedy_up(num_edges, groups, newcid2cids, linkage, cid2edges, cid2nodes):
             for cid in group:
                 removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
 
-            add_removed_comm = [val for val in group for group in groups if set(group) & set(removed_comm)]
+            add_removed_comm = [val for val in group for group in groups_r if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))
 
         else:
@@ -107,7 +107,7 @@ def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2edges, cid2
 
         belonging_cid = max([key for v in group for (key, value) in newcid2cids.items() if v in value])
 
-        belonging_cid_lst = set([key for (key, value) in newcid2cids.items() if len(set(group).intersection(value)) > 0])
+        #belonging_cid_lst = set([key for (key, value) in newcid2cids.items() if len(set(group).intersection(value)) > 0])
         
         current_group = current_group + [belonging_cid]
         current_group = [cid for cid in current_group if cid not in group]

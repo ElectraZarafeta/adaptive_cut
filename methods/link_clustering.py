@@ -1,11 +1,8 @@
-#%%
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
 from helper_functions import *
 from logger import logger
-import numpy as np
-from groups import groups_generator
 
 # Create adjacency dictionary
 # and a set with all edges in the network
@@ -184,11 +181,3 @@ def link_clustering(filename, delimiter):
     linkage, list_D_plot, newcid2cids = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid)
 
     return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, len(edges)
-
-# dataset = '/mnt/c/Users/ezara/OneDrive/Documents/thesis folder/data/Les Miserables.txt'
-# delimiter = '-'
-
-# linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
-# groups_generator(linkage, newcid2cids, num_edges)
-
-# #%%

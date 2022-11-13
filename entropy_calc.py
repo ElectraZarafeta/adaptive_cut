@@ -1,16 +1,11 @@
-#%%
 import math
 from scipy.cluster import hierarchy
 import numpy as np
-from methods.link_clustering import *
-from plots import *
-import collections
-from collections import defaultdict
 
 def entropy_calc(linkage, newcid2cids, num_edges):
 
     linkage_np = np.array(linkage)
-    similarity_vals = sorted(set(linkage_np[:,2].tolist()), ) #reverse=True)
+    similarity_vals = sorted(set(linkage_np[:,2].tolist()), )
 
     total_leaves = num_edges
     E, max_E = {}, {}
@@ -53,17 +48,3 @@ def entropy_calc(linkage, newcid2cids, num_edges):
     avg_sub = sum(sub)/len(sub)
 
     return E, max_E, div, avg_div, sub, avg_sub 
-
-# dataset = f'data/STEM concept networks Researchers.txt'
-# delimiter = '-'
-# main_path = 'output/'
-
-# linkage, list_D_plot, groups, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
-
-# entropy, max_entropy = entropy_calc(linkage, newcid2cids, num_edges)
-# #%%
-# div = [v/max_entropy[k] for k, v in entropy.items() if k != len(entropy)-1]
-# sum(div)/len(div)
-# #%%
-# entropy_plot(entropy, max_entropy, main_path)
-# #%%

@@ -59,7 +59,7 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 groups.append([int(cid1), int(cid2)])
   
-            elif cid1 > num_edges and cid2 > num_edges:
+            elif cid1 >= num_edges and cid2 >= num_edges:
 
                 cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
                 cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
@@ -111,7 +111,7 @@ def groups_generator(linkage, newcid2cids, num_edges):
                 else:
                     groups.append([int(cid1), int(cid2)])
 
-            elif cid1 > num_edges:
+            elif cid1 >= num_edges:
 
                 cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
 
@@ -132,7 +132,7 @@ def groups_generator(linkage, newcid2cids, num_edges):
                     groups.append([int(cid1), int(cid2)])
 
             
-            elif cid2 > num_edges:
+            elif cid2 >= num_edges:
 
                 cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
 

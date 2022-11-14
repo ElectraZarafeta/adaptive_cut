@@ -3,6 +3,8 @@ from scipy import cluster
 import numpy as np
 import random
 from logger import logger 
+from methods.link_clustering import *
+from scipy.cluster import *
 
 
 def partition_density(num_edges, cid2edges, cid2nodes, partitions):
@@ -89,7 +91,11 @@ def calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, newcid2cids
 
     # find children
     child = newcid2cids[curr_leader][0]
-    group_down = [group for group in groups if child in group][0]
+
+    try:
+        group_down = [group for group in groups if child in group][0]
+    except:
+        group_down = [group for group in groups if newcid2cids[child][0] in group][0]
 
     # update partitions
     partitions = partitions + group_down

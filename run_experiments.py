@@ -57,7 +57,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
 
         elif method == 'Tuning dendrogram cut':
 
-            threshold = 5000 # ?? 
+            threshold = 10000 
             stopping_threshold = 5
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, stopping_threshold=stopping_threshold)
@@ -76,21 +76,21 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
 
         elif method == 'Monte Carlo-tuning dendrogram cut':
 
-            threshold = [1000, 500]
-            epsilon = [0.3, 0.2, 0.1, 0.05, 0.01, 0.001, 0]
+            threshold = 2000
+            epsilon = [0.05, 0.01, 0.001, 0]
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, montecarlo=True, epsilon=epsilon)
 
             best_D = list(list_D.values())[-1]
 
-            imgname = f'montecarlo_tuning_dendrogram_cut_{threshold[0]}'
+            imgname = f'montecarlo_tuning_dendrogram_cut_{threshold}'
             dendrogram_greedy(linkage=linkage, best_partitions=best_partitions, cid2edges=cid2edges, newcid2cids=newcid2cids, orig_cid2edge=orig_cid2edge, colors_dict=colors_dict, main_path=main_path, imgname=imgname)
 
-            imgname1 = f'montecarlo_partitiondensity_{threshold[0]}_n'
-            imgname2 = f'montecarlo_clusters_{threshold[0]}'
-            tuning_metrics(list_D=list_D, list_clusters=list_clusters, threshold=threshold[0], main_path=main_path, imgname1=imgname1, imgname2=imgname2)
+            imgname1 = f'montecarlo_partitiondensity_{threshold}'
+            imgname2 = f'montecarlo_clusters_{threshold}'
+            tuning_metrics(list_D=list_D, list_clusters=list_clusters, threshold=threshold, main_path=main_path, imgname1=imgname1, imgname2=imgname2)
 
-            mlflow.log_param('Threshold', threshold[0])
+            mlflow.log_param('Threshold', threshold)
 
         else: 
             logger.warning('Unknown method...End of experiment')
@@ -159,10 +159,10 @@ for step, file in enumerate(os.listdir('data/')):
                 partitions[method], part_dens[method] = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups, num_edges=num_edges, linkage=linkage, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, orig_cid2edge=orig_cid2edge)
                 logger.warning(f'Method done!')
 
-            # for method in methods[2:]:
-            #     logger.warning(f'Running method: {method}')
-            #     partitions[method], part_dens[method] = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups, num_edges=num_edges, linkage=linkage, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, orig_cid2edge=orig_cid2edge, best_D_LC=part_dens['Link Clustering'], similarity_LC=similarity_value)
-            #     logger.warning(f'Method done!')
+            for method in methods[2:]:
+                logger.warning(f'Running method: {method}')
+                partitions[method], part_dens[method] = run_method(exp_id=exp_id, method=method, main_path=main_path, dataset=dataset, delimiter=delimiter, colors_dict=colors_dict, groups=groups, num_edges=num_edges, linkage=linkage, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, orig_cid2edge=orig_cid2edge, best_D_LC=part_dens['Link Clustering'], similarity_LC=similarity_value)
+                logger.warning(f'Method done!')
 
             graph_plot(partitions, part_dens, dataset, delimiter, num_edges, colors_dict, cid2edges, newcid2cids, main_path)
 

@@ -48,12 +48,19 @@ def groups_generator(linkage, newcid2cids, num_edges):
     for index, row in df_grouped.iterrows():
 
         curr_level = row['pairs']
+        #print(curr_level)
 
         flat_list = [item for sublist in curr_level for item in sublist]
+        checked = {x: False for x in flat_list}
         groups = []
 
         for pair in curr_level:
             cid1, cid2 = pair[0], pair[1]
+
+            flag = False
+
+            checked[cid1] = True
+            checked[cid2] = True
 
             if cid1 < num_edges and cid2 < num_edges:
 
@@ -66,6 +73,9 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 if (cids1_1 in flat_list) and (cids1_2 in flat_list) and (cids2_1 in flat_list) and (cids2_2 in flat_list):
 
+                    if checked[cids1_1] and checked[cids1_2] and checked[cids2_1] and checked[cids2_2]:
+                        continue
+                    
                     groups_tmp = [cids1_1, cids1_2, cids2_1, cids2_2]
 
                     for group in groups:
@@ -83,6 +93,9 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 elif (cids1_1 in flat_list) and (cids1_2 in flat_list):
 
+                    # if checked[cids1_1] and checked[cids1_2]:
+                    #     continue
+
                     groups_tmp = [cids1_1, cids1_2, int(cid2)]
 
                     for group in groups:
@@ -96,6 +109,9 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 elif (cids2_1 in flat_list) and (cids2_2 in flat_list):
 
+                    # if checked[cids2_1] and checked[cids2_2]:
+                    #     continue
+
                     groups_tmp = [cids2_1, cids2_2, int(cid1)]
 
                     for group in groups:
@@ -107,7 +123,6 @@ def groups_generator(linkage, newcid2cids, num_edges):
                     groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
                     groups.append(groups_tmp)
 
-
                 else:
                     groups.append([int(cid1), int(cid2)])
 
@@ -117,16 +132,24 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 if (cids1_1 in flat_list) and (cids1_2 in flat_list):
 
+                    # if checked[cids1_1] and checked[cids1_2]:
+                    #     continue
+
                     groups_tmp = [cids1_1, cids1_2, int(cid2)]
 
-                    for group in groups:
-                        if cids1_1 in group and cids1_2 not in group:
+                    for i, group in enumerate(groups):
+                        if (cids1_1 >= num_edges and newcid2cids[cids1_1][0] in group) or (cids1_2 >= num_edges and newcid2cids[cids1_2][0] in group):
+                            flag = True
+                            groups[i].append(int(cid2))
+                            break
+                        elif cids1_1 in group and cids1_2 not in group:
                             groups_tmp = list(set(groups_tmp + group))
                             groups_tmp.remove(cids1_2)
                             break
 
-                    groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                    groups.append(groups_tmp)
+                    if not flag:
+                        groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
+                        groups.append(groups_tmp)
 
                 else:
                     groups.append([int(cid1), int(cid2)])
@@ -138,23 +161,30 @@ def groups_generator(linkage, newcid2cids, num_edges):
 
                 if (cids2_1 in flat_list) and (cids2_2 in flat_list):
 
+                    # if checked[cids2_1] and checked[cids2_2]:
+                    #     continue
+
                     groups_tmp = [cids2_1, cids2_2, int(cid1)]
 
-                    for group in groups:
-                        if cids2_1 in group and cids2_2 not in group:
+                    for i, group in enumerate(groups):
+                        if (cids2_1 >= num_edges and newcid2cids[cids2_1][0] in group) or (cids2_2 >= num_edges and newcid2cids[cids2_2][0] in group):
+                            flag = True
+                            groups[i].append(int(cid1))
+                            break
+                        elif cids2_1 in group and cids2_2 not in group:
                             groups_tmp = list(set(groups_tmp + group))
                             groups_tmp.remove(cids2_2)
                             break
 
-                    groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                    groups.append(groups_tmp)
-
+                    if not flag:
+                        groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
+                        groups.append(groups_tmp)
 
                 else:
                     groups.append([int(cid1), int(cid2)])
 
         total_groups.append(groups)
-
+        
     total_groups = [item for sublist in total_groups for item in sublist]
 
     return total_groups

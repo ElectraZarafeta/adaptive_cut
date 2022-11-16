@@ -1,11 +1,6 @@
 import math
-from scipy.cluster import hierarchy
-import numpy as np
 
-def entropy_calc(linkage, newcid2cids, num_edges):
-
-    linkage_np = np.array(linkage)
-    similarity_vals = sorted(set(linkage_np[:,2].tolist()), )
+def entropy_calc(newcid2cids, num_edges, level):
 
     total_leaves = num_edges
     E, max_E = {}, {}
@@ -13,12 +8,9 @@ def entropy_calc(linkage, newcid2cids, num_edges):
     E[0] = math.log(num_edges, 2)
     max_E[0] = math.log(num_edges, 2)
 
-    for i, val in enumerate(similarity_vals):
+    for i, curr_partitions in enumerate(level.values()):
 
         logs = 0
-
-        T = hierarchy.fcluster(np.array(linkage), t=val, criterion='distance')
-        curr_partitions = sorted(set(hierarchy.leaders(np.array(linkage), T)[0].tolist()))
 
         for leader in curr_partitions:
 
@@ -32,7 +24,7 @@ def entropy_calc(linkage, newcid2cids, num_edges):
                 for item in result:
                     if newcid2cids.get(item):
                         result.extend(newcid2cids[item])
-                
+
                 num_leaves = len(set([val for val in result if val < num_edges]))
                 
             probj = num_leaves/total_leaves

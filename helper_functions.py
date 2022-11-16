@@ -43,148 +43,110 @@ def groups_generator(linkage, newcid2cids, num_edges):
     df['pairs'] = df.apply(lambda x: [x['cid1'], x['cid2']], axis=1)
     df = df[['pairs', 'sim']]
     df_grouped = df.groupby('sim').agg(lambda x: list(x))
-    total_groups = []
+    total_groups, level = {}, {}
+
+    # -1 corresponds to the leaves level
+    level[-1] = [i for i in range(num_edges)]
     
     for index, row in df_grouped.iterrows():
 
         curr_level = row['pairs']
-        #print(curr_level)
 
         flat_list = [item for sublist in curr_level for item in sublist]
-        checked = {x: False for x in flat_list}
-        groups = []
+        groups = {}
 
         for pair in curr_level:
             cid1, cid2 = pair[0], pair[1]
 
-            flag = False
+            if cid1 in list(groups.keys()) and cid2 in list(groups.keys()):
+                belonging_cid = max([key for v in [cid1, cid2] for (key, value) in newcid2cids.items() if v in value])
+                
+                groups[belonging_cid] = groups[cid1] + groups[cid2]
 
-            checked[cid1] = True
-            checked[cid2] = True
+                del groups[cid1]
+                del groups[cid2]
 
-            if cid1 < num_edges and cid2 < num_edges:
+            elif cid1 in list(groups.keys()):
+                belonging_cid = [key for (key, value) in newcid2cids.items() if cid1 in value][0]
+                
+                groups[belonging_cid] = groups[cid1] + [cid2]
 
-                groups.append([int(cid1), int(cid2)])
-  
-            elif cid1 >= num_edges and cid2 >= num_edges:
-
-                cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
-                cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
-
-                if (cids1_1 in flat_list) and (cids1_2 in flat_list) and (cids2_1 in flat_list) and (cids2_2 in flat_list):
-
-                    if checked[cids1_1] and checked[cids1_2] and checked[cids2_1] and checked[cids2_2]:
-                        continue
-                    
-                    groups_tmp = [cids1_1, cids1_2, cids2_1, cids2_2]
-
-                    for group in groups:
-                        if cids1_1 in group and cids1_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids1_2)
-                            break
-                        if cids2_1 in group and cids2_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids2_2)
-                            break
-
-                    groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                    groups.append(groups_tmp)
-
-                elif (cids1_1 in flat_list) and (cids1_2 in flat_list):
-
-                    # if checked[cids1_1] and checked[cids1_2]:
-                    #     continue
-
-                    groups_tmp = [cids1_1, cids1_2, int(cid2)]
-
-                    for group in groups:
-                        if cids1_1 in group and cids1_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids1_2)
-                            break
-
-                    groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                    groups.append(groups_tmp)
-
-                elif (cids2_1 in flat_list) and (cids2_2 in flat_list):
-
-                    # if checked[cids2_1] and checked[cids2_2]:
-                    #     continue
-
-                    groups_tmp = [cids2_1, cids2_2, int(cid1)]
-
-                    for group in groups:
-                        if cids2_1 in group and cids2_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids2_2)
-                            break
-                    
-                    groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                    groups.append(groups_tmp)
-
-                else:
-                    groups.append([int(cid1), int(cid2)])
-
-            elif cid1 >= num_edges:
-
-                cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
-
-                if (cids1_1 in flat_list) and (cids1_2 in flat_list):
-
-                    # if checked[cids1_1] and checked[cids1_2]:
-                    #     continue
-
-                    groups_tmp = [cids1_1, cids1_2, int(cid2)]
-
-                    for i, group in enumerate(groups):
-                        if (cids1_1 >= num_edges and newcid2cids[cids1_1][0] in group) or (cids1_2 >= num_edges and newcid2cids[cids1_2][0] in group):
-                            flag = True
-                            groups[i].append(int(cid2))
-                            break
-                        elif cids1_1 in group and cids1_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids1_2)
-                            break
-
-                    if not flag:
-                        groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                        groups.append(groups_tmp)
-
-                else:
-                    groups.append([int(cid1), int(cid2)])
-
+                del groups[cid1]
             
-            elif cid2 >= num_edges:
+            elif cid2 in list(groups.keys()):
+                belonging_cid = [key for (key, value) in newcid2cids.items() if cid2 in value][0]
+                
+                groups[belonging_cid] = groups[cid2] + [cid1]
 
-                cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
+                del groups[cid2]
 
-                if (cids2_1 in flat_list) and (cids2_2 in flat_list):
+            else:
 
-                    # if checked[cids2_1] and checked[cids2_2]:
-                    #     continue
+                if cid1 < num_edges and cid2 < num_edges:
 
-                    groups_tmp = [cids2_1, cids2_2, int(cid1)]
+                    belonging_cid = max([key for v in [cid1, cid2] for (key, value) in newcid2cids.items() if v in value])
+                    groups[belonging_cid] = [int(cid1), int(cid2)]
+    
+                elif cid1 >= num_edges and cid2 >= num_edges:
 
-                    for i, group in enumerate(groups):
-                        if (cids2_1 >= num_edges and newcid2cids[cids2_1][0] in group) or (cids2_2 >= num_edges and newcid2cids[cids2_2][0] in group):
-                            flag = True
-                            groups[i].append(int(cid1))
-                            break
-                        elif cids2_1 in group and cids2_2 not in group:
-                            groups_tmp = list(set(groups_tmp + group))
-                            groups_tmp.remove(cids2_2)
-                            break
+                    cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
+                    cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
 
-                    if not flag:
-                        groups = [group for group in groups if len(set(group).intersection(groups_tmp)) == 0]
-                        groups.append(groups_tmp)
+                    if (cids1_1 in flat_list) and (cids1_2 in flat_list) and (cids2_1 in flat_list) and (cids2_2 in flat_list):
 
-                else:
-                    groups.append([int(cid1), int(cid2)])
+                        belonging_cid = max([key for v in groups_tmp for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = groups_tmp
 
-        total_groups.append(groups)
-        
-    total_groups = [item for sublist in total_groups for item in sublist]
+                    elif (cids1_1 in flat_list) and (cids1_2 in flat_list):
 
-    return total_groups
+                        groups_tmp = [cids1_1, cids1_2, int(cid2)]
+
+                        belonging_cid = max([key for v in groups_tmp for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = groups_tmp
+
+                    elif (cids2_1 in flat_list) and (cids2_2 in flat_list):
+
+                        belonging_cid = max([key for v in groups_tmp for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = groups_tmp
+
+                    else:
+
+                        belonging_cid = max([key for v in [int(cid1), int(cid2)] for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = [int(cid1), int(cid2)]
+
+                elif cid1 >= num_edges:
+
+                    cids1_1, cids1_2 = newcid2cids[cid1][0], newcid2cids[cid1][1]
+
+                    if (cids1_1 in flat_list) and (cids1_2 in flat_list):
+
+                        groups_tmp = [cids1_1, cids1_2, int(cid2)]
+
+                        belonging_cid = max([key for v in groups_tmp for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = groups_tmp
+
+                    else:
+                        belonging_cid = max([key for v in [int(cid1), int(cid2)] for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = [int(cid1), int(cid2)]
+
+                
+                elif cid2 >= num_edges:
+
+                    cids2_1, cids2_2 = newcid2cids[cid2][0], newcid2cids[cid2][1]
+
+                    if (cids2_1 in flat_list) and (cids2_2 in flat_list):
+
+                        groups_tmp = [cids2_1, cids2_2, int(cid1)]
+
+                        belonging_cid = max([key for v in groups_tmp for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = groups_tmp
+
+                    else:
+                        belonging_cid = max([key for v in [int(cid1), int(cid2)] for (key, value) in newcid2cids.items() if v in value])
+                        groups[belonging_cid] = [int(cid1), int(cid2)]
+
+        curr_partitions = list(groups.keys()) + [v for v in list(level.values())[-1] if v not in flat_list]
+        level[index] = curr_partitions
+        total_groups.update(groups)
+
+    return total_groups, level

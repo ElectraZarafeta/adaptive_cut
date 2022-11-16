@@ -1,4 +1,3 @@
-#%%
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
@@ -10,12 +9,11 @@ import sys
 
 sys.setrecursionlimit(10000)
 
-def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2cids, cid2edges, colors_dict, main_path, imgname):
+def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2cids, cid2edges, level, colors_dict, main_path, imgname):
 
     # Find leaders
     linkage_np = np.array(linkage)
-    T = hierarchy.fcluster(linkage_np, t=similarity_value, criterion='distance')
-    leaders = hierarchy.leaders(linkage_np, T)[0].tolist()
+    leaders = level[similarity_value] 
 
     # Setup colors
     D_leaf_colors = {key:"#808080" for key in cid2edges.keys()}  
@@ -194,6 +192,3 @@ def entropy_plot(entropy, max_entropy, main_path):
     plt.xlabel('Level', fontsize=10)
     plt.savefig(main_path+'entropy.png')
     plt.close()
-
-    
-#%%

@@ -76,8 +76,8 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
 
         elif method == 'Monte Carlo-tuning dendrogram cut':
 
-            threshold = 2000
-            epsilon = [0.05, 0.01, 0.001, 0]
+            threshold = 10000
+            epsilon = 0.001 #[0.05, 0.01, 0.001, 0]
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2edges=cid2edges, cid2nodes=cid2nodes, linkage=linkage, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, montecarlo=True, epsilon=epsilon)
 

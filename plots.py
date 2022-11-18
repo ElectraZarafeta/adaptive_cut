@@ -1,3 +1,4 @@
+#%%
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
@@ -45,10 +46,25 @@ def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2
     plt.rcParams['axes.facecolor'] = 'white'
     plt.rcParams['axes.edgecolor'] = 'black'
     plt.figure(figsize=(20,20))
-    hierarchy.dendrogram(Z=linkage, labels=labels, link_color_func=lambda x: link_cols[x])
+    hierarchy.dendrogram(Z=linkage, link_color_func=lambda x: link_cols[x])
     plt.axhline(y=similarity_value, c='k')
     plt.savefig(main_path+imgname+'.png')
     plt.close()
+
+# dataset = 'data/Europe road.txt'
+# delimiter = '-'
+# linkage_tmp, list_D_plot, newcid2cids_tmp, orig_cid2edge_tmp, cid2edges_tmp, cid2nodes_tmp, num_edges_tmp = link_clustering(filename=dataset, delimiter=delimiter)
+
+# best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
+# colors_dict_tmp = color_dict(cid2edges_tmp)
+# groups_gen, level_gen, level_entropy = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp, list_D_plot)
+
+# main_path = 'output/'
+
+# imgname = 'link_clustering_dendrogram'
+# dendrogram_plot(num_edges=num_edges_tmp, linkage=linkage_tmp, similarity_value=similarity_value, orig_cid2edge=orig_cid2edge_tmp, newcid2cids=newcid2cids_tmp, cid2edges=cid2edges_tmp, level=level_gen, colors_dict=colors_dict_tmp, main_path=main_path, imgname=imgname)
+
+# #%%
 
 
 def dendrogram_greedy(linkage, best_partitions, cid2edges, newcid2cids, orig_cid2edge, colors_dict, main_path, imgname):

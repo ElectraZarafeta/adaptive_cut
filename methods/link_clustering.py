@@ -1,3 +1,4 @@
+#%%
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
@@ -95,7 +96,7 @@ def similarities_weighted(adj, wij):
 
 # Each link is initially assigned to its own community
 def initialize_edges(edges):
-    edge2cid, cid2edges, orig_cid2edge, cid2nodes = {}, {}, {}, {}
+    edge2cid, cid2edges, orig_cid2edge, cid2nodes, cid2numedges, cid2numnodes  = {}, {}, {}, {}, {}, {}
     curr_maxcid = 0
 
     for cid,edge in enumerate(edges):
@@ -104,13 +105,15 @@ def initialize_edges(edges):
         cid2edges[cid] = set([edge])
         orig_cid2edge[cid]  = edge
         cid2nodes[cid] = set( edge )
+        cid2numedges[cid] = 1
+        cid2numnodes[cid] = 1
     curr_maxcid = len(edges) - 1
 
-    return edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid
+    return edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes
 
 
 # Single-linkage hierarchical clustering
-def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2nodes, curr_maxcid):
+def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes):
 
     linkage = [] # [(comm_id1, comm_id2, oms, num_edges)]
     D = 0.0 # partition density
@@ -120,6 +123,8 @@ def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2n
     S_prev = -1.0
     M = 2/num_edges
     newcid2cids = {}
+
+    cid2numedges_tmp, cid2numnodes_tmp = copy(cid2numedges), copy(cid2numedges_tmp)
 
     for i, (oms, edges) in enumerate(chain(similarities, [(1.0, (None, None))])):
         sim = 1-oms
@@ -136,7 +141,6 @@ def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2n
             continue
 
         comm_id1, comm_id2 = edge2cid[edge1], edge2cid[edge2]
-        
         
         if comm_id1 == comm_id2: # already merged!
             continue
@@ -159,14 +163,20 @@ def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2n
             cid2nodes[newcid] |= set(e)
             edge2cid[e] = newcid
 
+        del cid2edges[comm_id1], cid2edges[comm_id2]
+        del cid2nodes[comm_id1], cid2nodes[comm_id2]
+
         m, n = len(cid2edges[newcid]), len(cid2nodes[newcid])
+
+        cid2numedges_tmp[newcid] = m
+        cid2numnodes_tmp[newcid] = n
 
         linkage.append((comm_id1, comm_id2, oms, m))
 
         Dc12 = Dc(m, n)
         D += (Dc12 - Dc1 - Dc2) * M
 
-    return linkage, list_D_plot, newcid2cids
+    return linkage, list_D_plot, newcid2cids, cid2numedges_tmp, cid2numnodes_tmp
 
 
 def link_clustering(filename, delimiter):
@@ -176,8 +186,25 @@ def link_clustering(filename, delimiter):
 
     similarities = similarities_unweighted(adj=adj) #similarities_weighted(adj, wij)
 
-    edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid = initialize_edges(edges=edges)
+    edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes = initialize_edges(edges=edges)
 
-    linkage, list_D_plot, newcid2cids = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid)
+    linkage, list_D_plot, newcid2cids, cid2numedges_m, cid2numnodes_n = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
 
-    return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2edges, cid2nodes, len(edges)
+    return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges_m, cid2numnodes_n, len(edges)
+
+# dataset = '../data/Europe road.txt'
+# delimiter = '-'
+
+# for line in open(dataset):
+#     # Get the list of nodes in each edge
+#     L = line.strip().split(delimiter)
+#     ni, nj = L[0], L[1]
+#     if ni != nj: 
+#         edges.add( swap(int(ni), int(nj)) )
+
+
+# linkage_tmp, list_D_plot, newcid2cids_tmp, orig_cid2edge_tmp, cid2edges_tmp, cid2nodes_tmp, num_edges_tmp = link_clustering(filename=dataset, delimiter=delimiter)
+
+
+
+#%%

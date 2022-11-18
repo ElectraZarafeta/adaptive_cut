@@ -185,8 +185,8 @@ def entropy_plot(entropy, max_entropy, main_path):
     sns.set_style('darkgrid')
     sns.set_palette('pastel')
 
-    plt.plot(entropy.keys(), entropy.values(), color='black')
-    plt.plot(max_entropy.keys(), max_entropy.values(), color='blue')
+    plt.plot(list(entropy.keys()), list(entropy.values()), color='black')
+    plt.plot(list(max_entropy.keys()), list(max_entropy.values()), color='blue')
     plt.title('Entropy at each level')
     #plt.ylabel('Entropy', fontsize=10)
     plt.xlabel('Level', fontsize=10)

@@ -37,16 +37,17 @@ def color_dict(cid2edges):
     return colors_dict
 
 
-def groups_generator(linkage, newcid2cids, num_edges):
+def groups_generator(linkage, newcid2cids, num_edges, list_D):
 
     df = pd.DataFrame(np.array(linkage), columns = ['cid1','cid2','sim','num_edges'])
     df['pairs'] = df.apply(lambda x: [x['cid1'], x['cid2']], axis=1)
     df = df[['pairs', 'sim']]
-    df_grouped = df.groupby('sim').agg(lambda x: list(x))
-    total_groups, level = {}, {}
+    df_grouped = df.groupby('sim').agg(lambda x: list(x)).reset_index()
+    total_groups, level, level_entropy = {}, {}, {}
 
     # -1 corresponds to the leaves level
     level[-1] = [i for i in range(num_edges)]
+    level_entropy[-1] = [i for i in range(num_edges)]
     
     for index, row in df_grouped.iterrows():
 
@@ -146,7 +147,21 @@ def groups_generator(linkage, newcid2cids, num_edges):
                         groups[belonging_cid] = [int(cid1), int(cid2)]
 
         curr_partitions = list(groups.keys()) + [v for v in list(level.values())[-1] if v not in flat_list]
-        level[index] = curr_partitions
+        
+        curr_sim = row['sim']
+        if index+1 < df_grouped.shape[0]:
+            next_sim = df_grouped.iloc[index+1]['sim']
+        else:
+            next_sim = None
+
+        for D, sim in list_D:
+            if sim >= curr_sim:
+                if next_sim == None:
+                    level[sim] = curr_partitions
+                elif sim < next_sim:        
+                    level[sim] = curr_partitions
+
+        level_entropy[curr_sim] = curr_partitions
         total_groups.update(groups)
 
-    return total_groups, level
+    return total_groups, level, level_entropy

@@ -26,10 +26,10 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
 
             colors_dict_tmp = color_dict(cid2edges_tmp)
-            groups_gen, level_gen = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp)
+            groups_gen, level_gen, level_entropy = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp, list_D_plot)
             
             # Entropy calculations
-            entropy, max_entropy, div, avg_div, sub, avg_sub = entropy_calc(newcid2cids_tmp, num_edges_tmp, level_gen)
+            entropy, max_entropy, div, avg_div, sub, avg_sub = entropy_calc(newcid2cids_tmp, num_edges_tmp, level_entropy)
             entropy_plot(entropy, max_entropy, main_path)
             mlflow.log_artifact(main_path+'entropy.png')
             mlflow.log_metric('Avg- Real entropy div Max entropy', avg_div)
@@ -112,6 +112,8 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
     else:
         return best_partitions, best_D
 
+
+
 length = len(os.listdir('data/'))
 
 for step, file in enumerate(os.listdir('data/')):
@@ -180,5 +182,5 @@ for step, file in enumerate(os.listdir('data/')):
             err_file.close()
 
             logger.warning(f'{file} moved to error_data directory')
-            os.rmdir(main_path)
+            #os.rmdir(main_path)
 #%%

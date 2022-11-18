@@ -19,11 +19,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
         # which had partition density less than the best
         if len(set(group).intersection(removed_comm)) > 0:
 
-            for cid in group:
-                if cid < num_edges:
-                    removed_comm = removed_comm + [cid]
-                else:
-                    removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
+            removed_comm = removed_comm + [cid for cid in group if cid < num_edges] + [i for cid in group if cid >= num_edges for (key, value) in newcid2cids.items() for i in value if key == cid]
             
             add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))
@@ -33,11 +29,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
         belonging_cid_lst = [key for g in group for (key, value) in newcid2cids.items() if g in value]
         if len(set(belonging_cid_lst).intersection(removed_comm)) > 0:
 
-            for cid in group:
-                if cid < num_edges:
-                    removed_comm = removed_comm + [cid]
-                else:
-                    removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
+            removed_comm = removed_comm + [cid for cid in group if cid < num_edges] + [i for cid in group if cid >= num_edges for (key, value) in newcid2cids.items() for i in value if key == cid]
             
             add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))
@@ -70,8 +62,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
         if D < best_D[-1]:
             partition_list = partition_list[:-1]
 
-            for cid in group:
-                removed_comm = removed_comm + [i for (key, value) in newcid2cids.items() for i in value if key == cid]
+            removed_comm = removed_comm + [i for cid in group for (key, value) in newcid2cids.items() for i in value if key == cid]
 
             add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
             removed_comm = list(set(removed_comm + add_removed_comm))

@@ -124,7 +124,7 @@ def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2n
     M = 2/num_edges
     newcid2cids = {}
 
-    cid2numedges_tmp, cid2numnodes_tmp = copy(cid2numedges), copy(cid2numedges_tmp)
+    cid2numedges_tmp, cid2numnodes_tmp = copy(cid2numedges), copy(cid2numnodes)
 
     for i, (oms, edges) in enumerate(chain(similarities, [(1.0, (None, None))])):
         sim = 1-oms
@@ -182,29 +182,11 @@ def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2n
 def link_clustering(filename, delimiter):
 
     adj, edges = read_edgelist_unweighted(filename=filename, delimiter=delimiter)
-    #adj, edges, wij = read_edgelist_weighted('lesmis/lesmis_weighted.txt', '-')
 
-    similarities = similarities_unweighted(adj=adj) #similarities_weighted(adj, wij)
+    similarities = similarities_unweighted(adj=adj)
 
     edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes = initialize_edges(edges=edges)
 
     linkage, list_D_plot, newcid2cids, cid2numedges_m, cid2numnodes_n = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
 
     return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges_m, cid2numnodes_n, len(edges)
-
-# dataset = '../data/Europe road.txt'
-# delimiter = '-'
-
-# for line in open(dataset):
-#     # Get the list of nodes in each edge
-#     L = line.strip().split(delimiter)
-#     ni, nj = L[0], L[1]
-#     if ni != nj: 
-#         edges.add( swap(int(ni), int(nj)) )
-
-
-# linkage_tmp, list_D_plot, newcid2cids_tmp, orig_cid2edge_tmp, cid2edges_tmp, cid2nodes_tmp, num_edges_tmp = link_clustering(filename=dataset, delimiter=delimiter)
-
-
-
-#%%

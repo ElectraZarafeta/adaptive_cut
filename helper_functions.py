@@ -28,10 +28,10 @@ def swap(a,b):
         return b,a
     return a,b
 
-def color_dict(cid2edges):
+def color_dict(cid2numedges):
     colors_dict = {}
 
-    for cid in cid2edges.keys():
+    for cid in cid2numedges.keys():
         colors_dict[cid] = '#%06X' % randint(0, 0xFFFFFF)
 
     return colors_dict

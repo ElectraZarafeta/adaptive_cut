@@ -1,22 +1,23 @@
+#%%
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster import *
 import numpy as np
 import networkx as nx
 from logger import logger
-from fa2 import ForceAtlas2
+#from fa2 import ForceAtlas2
 import sys
 
 sys.setrecursionlimit(10000)
 
-def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2cids, cid2edges, level, colors_dict, main_path, imgname):
+def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2cids, cid2numedges, level, colors_dict, main_path, imgname):
 
     # Find leaders
     linkage_np = np.array(linkage)
     leaders = level[similarity_value] 
 
     # Setup colors
-    D_leaf_colors = {key:"#808080" for key in cid2edges.keys()}  
+    D_leaf_colors = {key:"#808080" for key in cid2numedges.keys()}  
 
     for key,value in newcid2cids.items():
         value = list(value)
@@ -50,13 +51,12 @@ def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2
     plt.savefig(main_path+imgname+'.png')
     plt.close()
 
-
-def dendrogram_greedy(linkage, best_partitions, cid2edges, newcid2cids, orig_cid2edge, colors_dict, main_path, imgname):
+def dendrogram_greedy(linkage, best_partitions, cid2numedges, newcid2cids, orig_cid2edge, colors_dict, main_path, imgname):
 
     linkage_np = np.array(linkage)
     best_partitions = sorted(best_partitions, reverse=True)
 
-    D_leaf_colors = {key:"#808080" for key in cid2edges.keys()}  
+    D_leaf_colors = {key:"#808080" for key in cid2numedges.keys()}  
 
     for key,value in newcid2cids.items():
         value = list(value)
@@ -105,78 +105,78 @@ def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgnam
     plt.close()
 
 
-def graph_plot(partitions, part_dens, filename, delimiter, num_edges, colors_dict, cid2edges, newcid2cids, main_path):
+# def graph_plot(partitions, part_dens, filename, delimiter, num_edges, colors_dict, cid2edges, newcid2cids, main_path):
 
-    fig, axes = plt.subplots(1, len(list(partitions.keys())), figsize=(40, 15))
-    fig.subplots_adjust(hspace = 0.2, wspace = 1)
-    ax = axes.flatten()
-    logger.warning(f'ax {ax}')
+#     fig, axes = plt.subplots(1, len(list(partitions.keys())), figsize=(40, 15))
+#     fig.subplots_adjust(hspace = 0.2, wspace = 1)
+#     ax = axes.flatten()
+#     logger.warning(f'ax {ax}')
 
-    G = nx.read_edgelist(filename, delimiter=delimiter, nodetype=int)
+#     G = nx.read_edgelist(filename, delimiter=delimiter, nodetype=int)
 
-    forceatlas2 = ForceAtlas2(
-                        # Behavior alternatives
-                        outboundAttractionDistribution=True,  # Dissuade hubs
-                        linLogMode=False,  # NOT IMPLEMENTED
-                        adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
-                        edgeWeightInfluence=1.0,
+#     forceatlas2 = ForceAtlas2(
+#                         # Behavior alternatives
+#                         outboundAttractionDistribution=True,  # Dissuade hubs
+#                         linLogMode=False,  # NOT IMPLEMENTED
+#                         adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
+#                         edgeWeightInfluence=1.0,
 
-                        # Performance
-                        jitterTolerance=10.0,  # Tolerance
-                        barnesHutOptimize=True,
-                        barnesHutTheta=1.2,
-                        multiThreaded=False,  # NOT IMPLEMENTED
+#                         # Performance
+#                         jitterTolerance=10.0,  # Tolerance
+#                         barnesHutOptimize=True,
+#                         barnesHutTheta=1.2,
+#                         multiThreaded=False,  # NOT IMPLEMENTED
 
-                        # Tuning
-                        scalingRatio=100.0,
-                        strongGravityMode=False,
-                        gravity=0.2,
+#                         # Tuning
+#                         scalingRatio=100.0,
+#                         strongGravityMode=False,
+#                         gravity=0.2,
 
-                        # Log
-                        verbose=False)
+#                         # Log
+#                         verbose=False)
 
-    positions = forceatlas2.forceatlas2_networkx_layout(G, pos=None, iterations=2000)
+#     positions = forceatlas2.forceatlas2_networkx_layout(G, pos=None, iterations=2000)
 
-    i = 0
+#     i = 0
 
-    for method in partitions.keys():
+#     for method in partitions.keys():
 
-        edge_color = {}
-        leaders = partitions[method]
+#         edge_color = {}
+#         leaders = partitions[method]
 
-        for leader in leaders:
-            if leader < num_edges:
-                color = '#808080'
+#         for leader in leaders:
+#             if leader < num_edges:
+#                 color = '#808080'
 
-                # color map
-                edge_color.update({edge: color for edge in cid2edges[leader]})
+#                 # color map
+#                 edge_color.update({edge: color for edge in cid2edges[leader]})
 
-            else:
-                color = colors_dict[leader]
+#             else:
+#                 color = colors_dict[leader]
 
-                value = newcid2cids[leader]
-                value = list(value)
-                result = value.copy()
-                for item in result:
-                    if newcid2cids.get(item):
-                        result.extend(newcid2cids[item])
+#                 value = newcid2cids[leader]
+#                 value = list(value)
+#                 result = value.copy()
+#                 for item in result:
+#                     if newcid2cids.get(item):
+#                         result.extend(newcid2cids[item])
 
-                # color map
-                edge_color.update({edge: color for val in result for edge in cid2edges[val] if val < num_edges})
+#                 # color map
+#                 edge_color.update({edge: color for val in result for edge in cid2edges[val] if val < num_edges})
             
 
-        edge_color = dict(sorted(edge_color.items()))
+#         edge_color = dict(sorted(edge_color.items()))
 
-        nx.draw_networkx_nodes(G, positions, node_size=5, node_color="black", alpha=0.2, ax=ax[i])
-        nx.draw_networkx_edges(G, positions, edge_color=list(edge_color.values()), alpha=0.8, ax=ax[i])
+#         nx.draw_networkx_nodes(G, positions, node_size=5, node_color="black", alpha=0.2, ax=ax[i])
+#         nx.draw_networkx_edges(G, positions, edge_color=list(edge_color.values()), alpha=0.8, ax=ax[i])
 
-        ax[i].set_title(f'{method}, {part_dens[method]:.2f}', fontsize=24)
-        ax[i].set_axis_off()
+#         ax[i].set_title(f'{method}, {part_dens[method]:.2f}', fontsize=24)
+#         ax[i].set_axis_off()
 
-        i += 1
+#         i += 1
 
-    plt.savefig(main_path+'graphs.png')
-    plt.close()
+#     plt.savefig(main_path+'graphs.png')
+#     plt.close()
 
 
 def entropy_plot(entropy, max_entropy, main_path):

@@ -2,7 +2,7 @@ from helper_functions import *
 from logger import logger
 import copy
 
-def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
+def greedy_up(num_edges, groups, newcid2cids, cid2numedges, cid2numnodes):
 
     M = 2/num_edges
     groups_r = copy.deepcopy(groups)
@@ -38,7 +38,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
 
         if group == last_group:
             for cid in group:
-                m, n = len(cid2edges[cid]), len(cid2nodes[cid])
+                m, n = cid2numedges[cid], cid2numnodes[cid]
                 Dc_list.append(Dc(m, n))
 
             partition_list.append(set(group))
@@ -52,7 +52,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
             current_group = latest_partition_list + group     
 
             for cid in current_group:
-                m, n = len(cid2edges[cid]), len(cid2nodes[cid])
+                m, n = cid2numedges[cid], cid2numnodes[cid]
                 Dc_list.append(Dc(m, n))
             
             partition_list.append(set(current_group))
@@ -75,7 +75,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2edges, cid2nodes):
     return best_D[-1], best_partitions
 
 
-def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2edges, cid2nodes):
+def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2numedges, cid2numnodes):
 
     M = 2/num_edges
     best_D = [0.0]
@@ -98,7 +98,7 @@ def greedy_bottom(num_edges, groups, orig_cid2edge, newcid2cids, cid2edges, cid2
         current_group = [cid for cid in current_group if cid not in group]
 
         for cid in current_group:
-            m, n = len(cid2edges[cid]), len(cid2nodes[cid])
+            m, n = cid2numedges[cid], cid2numnodes[cid]
             Dc_list.append(Dc(m, n))
         
         partition_list.append(set(current_group))

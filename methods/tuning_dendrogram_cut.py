@@ -3,7 +3,7 @@ import random
 from copy import deepcopy
 from logger import logger 
 
-def partition_density(num_edges, cid2edges, cid2nodes, partitions):
+def partition_density(num_edges, cid2numedges, cid2numnodes, partitions):
     '''
     Calculate the Partition Density 
 
@@ -17,7 +17,7 @@ def partition_density(num_edges, cid2edges, cid2nodes, partitions):
 
     Dc_list = []
     for cid in partitions:
-        m, n = len(cid2edges[cid]), len(cid2nodes[cid])
+        m, n = cid2numedges[cid], cid2numnodes[cid]
         Dc_list.append(Dc(m, n))
 
     D = M * sum(Dc_list)
@@ -25,7 +25,7 @@ def partition_density(num_edges, cid2edges, cid2nodes, partitions):
     return D
 
 
-def calc_partdens_up(curr_leader, num_edges, groups, cid2edges, cid2nodes, newcid2cids, curr_partitions):
+def calc_partdens_up(curr_leader, num_edges, groups, cid2numedges, cid2numnodes, newcid2cids, curr_partitions):
     '''
     Identify the partitions in case we have to move the current leader one level up. 
     This means that we have to identify the community id in which the current leader
@@ -61,12 +61,12 @@ def calc_partdens_up(curr_leader, num_edges, groups, cid2edges, cid2nodes, newci
     partitions.append(belonging_cid)
 
     # Calculate partition density
-    D = partition_density(num_edges, cid2edges, cid2nodes, partitions)
+    D = partition_density(num_edges, cid2numedges, cid2numnodes, partitions)
 
     return partitions, D
 
 
-def calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, groups, curr_partitions):
+def calc_partdens_down(curr_leader, num_edges, cid2numedges, cid2numnodes, groups, curr_partitions):
     '''
     Identify the partitions in case we have to move the current leader one level down. 
     This means that we have to identify the children ids which the current leader
@@ -93,12 +93,12 @@ def calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, groups, cur
     partitions = partitions + group_down
 
     # Calculate partition density
-    D = partition_density(num_edges, cid2edges, cid2nodes, partitions)
+    D = partition_density(num_edges, cid2numedges, cid2numnodes, partitions)
 
     return partitions, D
 
 
-def tune_cut(similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups, num_edges, level, threshold, stopping_threshold=None, montecarlo=False, epsilon=None):
+def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, groups, num_edges, level, threshold, stopping_threshold=None, montecarlo=False, epsilon=None):
 
     leaders = level[similarity_value] 
 
@@ -140,7 +140,7 @@ def tune_cut(similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups
 
             # Move one level up   
 
-            partitions_tmp, curr_D = calc_partdens_up(curr_leader, num_edges, groups, cid2edges, cid2nodes, newcid2cids, curr_partitions)
+            partitions_tmp, curr_D = calc_partdens_up(curr_leader, num_edges, groups, cid2numedges, cid2numnodes, newcid2cids, curr_partitions)
 
         else:
             # Move one level down
@@ -148,7 +148,7 @@ def tune_cut(similarity_value, best_D, cid2edges, cid2nodes, newcid2cids, groups
             if curr_leader < num_edges:
                 partitions_tmp, curr_D = curr_partitions, best_D
             else:
-                partitions_tmp, curr_D = calc_partdens_down(curr_leader, num_edges, cid2edges, cid2nodes, groups, curr_partitions)
+                partitions_tmp, curr_D = calc_partdens_down(curr_leader, num_edges, cid2numedges, cid2numnodes, groups, curr_partitions)
 
         previous_D = best_D
 

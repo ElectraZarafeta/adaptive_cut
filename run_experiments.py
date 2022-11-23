@@ -25,6 +25,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             linkage_tmp, list_D_plot, newcid2cids_tmp, orig_cid2edge_tmp, cid2numedges_tmp, cid2numnodes_tmp, num_edges_tmp = link_clustering(filename=dataset, delimiter=delimiter)
             best_D, similarity_value = max(list_D_plot,key=lambda item:item[0])
             mlflow.log_metric('Partition density', best_D)
+            mlflow.log_metric('Network size', num_edges_tmp)
 
             colors_dict_tmp = color_dict(cid2numedges_tmp)
             groups_gen, level_gen, level_entropy = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp, list_D_plot)

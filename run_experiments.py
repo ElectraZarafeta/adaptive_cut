@@ -30,17 +30,12 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
             groups_gen, level_gen, level_entropy = groups_generator(linkage_tmp, newcid2cids_tmp, num_edges_tmp, list_D_plot)
             
             # Entropy calculations
-            entropy, max_entropy, div, avg_div, sub, avg_sub = entropy_calc(newcid2cids_tmp, num_edges_tmp, level_entropy)
+            entropy, max_entropy, sub, avg_sub = entropy_calc(newcid2cids_tmp, num_edges_tmp, level_entropy)
             entropy_plot(entropy, max_entropy, main_path)
             mlflow.log_artifact(main_path+'entropy.png')
-            mlflow.log_metric('Avg- Real entropy div Max entropy', avg_div)
-            mlflow.log_metric('Avg- Max entropy sub Real entropy', avg_sub)
-            mlflow.log_text(str(div), 'Real entropy div Max entropy.txt')
-            mlflow.log_text(str(sub), 'Max entropy sub Real entropy.txt')
+            mlflow.log_metric('Balanceness', avg_sub)
             
-            #T = hierarchy.fcluster(np.array(linkage_tmp), t=similarity_value, criterion='distance')
-            best_partitions = level_gen[similarity_value] #hierarchy.leaders(np.array(linkage_tmp), T)[0].tolist()
-            
+            best_partitions = level_gen[similarity_value] 
             try:
                 imgname = 'link_clustering_dendrogram'
                 dendrogram_plot(num_edges=num_edges_tmp, linkage=linkage_tmp, similarity_value=similarity_value, orig_cid2edge=orig_cid2edge_tmp, newcid2cids=newcid2cids_tmp, cid2numedges=cid2numedges_tmp, level=level_gen, colors_dict=colors_dict_tmp, main_path=main_path, imgname=imgname)

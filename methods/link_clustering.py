@@ -1,4 +1,3 @@
-#%%
 from itertools import combinations, chain
 from collections import defaultdict
 from copy import copy
@@ -113,7 +112,7 @@ def initialize_edges(edges):
 
 
 # Single-linkage hierarchical clustering
-def single_linkage_HC(edges, num_edges, similarities, edge2cid, cid2edges, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes):
+def single_linkage_HC(num_edges, similarities, edge2cid, cid2edges, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes):
 
     linkage = [] # [(comm_id1, comm_id2, oms, num_edges)]
     D = 0.0 # partition density
@@ -187,6 +186,6 @@ def link_clustering(filename, delimiter):
 
     edge2cid, cid2edges, orig_cid2edge, cid2nodes, curr_maxcid, cid2numedges, cid2numnodes = initialize_edges(edges=edges)
 
-    linkage, list_D_plot, newcid2cids, cid2numedges_m, cid2numnodes_n = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
+    linkage, list_D_plot, newcid2cids, cid2numedges_m, cid2numnodes_n = single_linkage_HC(num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
 
     return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges_m, cid2numnodes_n, len(edges)

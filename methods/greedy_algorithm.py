@@ -1,11 +1,11 @@
 from helper_functions import *
 from logger import logger
-import copy
+from copy import *
 
-def greedy_up(num_edges, groups, newcid2cids, cid2numedges, cid2numnodes):
+def greedy_up(num_edges, groups, cid2numedges, cid2numnodes):
 
     M = 2/num_edges
-    groups_r = copy.deepcopy(groups)
+    groups_r = deepcopy(groups)
     groups_r = dict(reversed(list(groups_r.items())))
     last_group = list(groups_r.values())[0]
     best_D = [0.0]
@@ -15,25 +15,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2numedges, cid2numnodes):
 
         Dc_list = []
 
-        # Do not look on the communities 
-        # which had partition density less than the best
         if len(set(group).intersection(removed_comm)) > 0:
-
-            removed_comm = removed_comm + [cid for cid in group if cid < num_edges] + [i for cid in group if cid >= num_edges for (key, value) in newcid2cids.items() for i in value if key == cid]
-            
-            add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
-            removed_comm = list(set(removed_comm + add_removed_comm))
-            
-            continue
-
-        belonging_cid_lst = [key for g in group for (key, value) in newcid2cids.items() if g in value]
-        if len(set(belonging_cid_lst).intersection(removed_comm)) > 0:
-
-            removed_comm = removed_comm + [cid for cid in group if cid < num_edges] + [i for cid in group if cid >= num_edges for (key, value) in newcid2cids.items() for i in value if key == cid]
-            
-            add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
-            removed_comm = list(set(removed_comm + add_removed_comm))
-            
             continue
 
         if group == last_group:
@@ -54,7 +36,7 @@ def greedy_up(num_edges, groups, newcid2cids, cid2numedges, cid2numnodes):
             for cid in current_group:
                 m, n = cid2numedges[cid], cid2numnodes[cid]
                 Dc_list.append(Dc(m, n))
-            
+
             partition_list.append(set(current_group))
 
             D = M * sum(Dc_list)
@@ -62,10 +44,14 @@ def greedy_up(num_edges, groups, newcid2cids, cid2numedges, cid2numnodes):
         if D < best_D[-1]:
             partition_list = partition_list[:-1]
 
-            removed_comm = removed_comm + [i for cid in group for (key, value) in newcid2cids.items() for i in value if key == cid]
+            value = groups[b_cid]
+            value = list(value)
+            result = value.copy()
+            for item in result:
+                if groups.get(item):
+                    result.extend(groups[item])
 
-            add_removed_comm = [val for val in group for group in groups_r.values() if set(group) & set(removed_comm)]
-            removed_comm = list(set(removed_comm + add_removed_comm))
+            removed_comm = removed_comm + result
 
         else:
             best_D.append(D)

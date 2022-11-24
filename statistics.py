@@ -12,7 +12,7 @@ def min_max_scaling(series):
 
 df = pd.DataFrame()
 
-exper_lst = [135, 131, 130, 129, 126, 122, 121, 119, 118, 116, 113, 112, 111, 110, 109, 108, 107, 103, 102, 101, 73, 72, 70, 69, 68, 65, 62, 59, 10, 9, 0]
+exper_lst = [131, 130, 129, 126, 122, 121, 119, 118, 116, 113, 112, 111, 110, 109, 108, 107, 103, 102, 101, 73, 72, 70, 69, 68, 65, 62, 59, 10, 9, 0]
 
 for i in range(136):
 
@@ -20,7 +20,7 @@ for i in range(136):
         experiment_id = f'{i}'
 
         runs = mlflow.search_runs(experiment_ids=experiment_id)
-        
+
         df = df.append(runs)
 
 df = df[df.status == 'FINISHED']
@@ -85,16 +85,16 @@ dfs = [link_clust, greedy_up, greedy_bottom, tune, montecarlo]
 df_final = ft.reduce(lambda left, right: pd.merge(left, right, on='experiment_id'), dfs)
 #%%
 
-# Plot the distribution of the normalized partition density
-df_tmp = df_final[['Greedy algorithm bottom', 'Greedy algorithm up', 'Tuning dendrogram cut', 'Link Clustering', 'Monte Carlo simulation']]
-df_tmp = df_tmp.melt()
-df_tmp['value'] = min_max_scaling(df_tmp['value'])
+# # Plot the distribution of the normalized partition density
+# df_tmp = df_final[['Greedy algorithm bottom', 'Greedy algorithm up', 'Tuning dendrogram cut', 'Link Clustering', 'Monte Carlo simulation']]
+# df_tmp = df_tmp.melt()
+# df_tmp['value'] = min_max_scaling(df_tmp['value'])
 
-g = sns.kdeplot(data=df_tmp, x="value", hue="variable", fill=True, common_norm=False, alpha=0.4, palette='hls')
-sns.move_legend(g, "upper right", title='Method')
-plt.xlabel('Normalized Partition density')
-plt.ylabel('Probability Density')
-plt.show()
+# g = sns.kdeplot(data=df_tmp, x="value", hue="variable", fill=True, common_norm=False, alpha=0.4, palette='hls')
+# sns.move_legend(g, "upper right", title='Method')
+# plt.xlabel('Normalized Partition density')
+# plt.ylabel('Probability Density')
+# plt.show()
 
 #%%
 
@@ -104,12 +104,12 @@ df_final['Tuning - LC'] = df_final['Tuning dendrogram cut'] - df_final['Link Clu
 df_final['MC - LC'] = df_final['Monte Carlo simulation'] - df_final['Link Clustering'] 
 
 #%%
-#df_final = df_final[['Greedy bottom - LC', 'Greedy up - LC', 'Tuning - LC', 'MC - LC']]
+df_final = df_final[['Greedy bottom - LC', 'Greedy up - LC', 'Tuning - LC', 'MC - LC']]
 
 # Plot the distribution of the difference between each method and the baseline model
 df_melt = df_final.melt()
 
-g = sns.kdeplot(data=df_melt, x="value", hue="variable", fill=True, common_norm=False, alpha=0.4, palette='hls')
+g = sns.histplot(data=df_melt, x="value", hue="variable", bins=6, multiple='stack', palette='hls')
 sns.move_legend(g, "upper left", title='Method')
 plt.xlabel('Improvement')
 plt.ylabel('Probability Density')

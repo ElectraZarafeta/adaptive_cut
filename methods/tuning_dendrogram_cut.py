@@ -116,6 +116,20 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
 
     while True:
 
+        if montecarlo:
+            if i < threshold/5:
+                epsilon_tmp = epsilon[0]
+            elif i < 2*(threshold/5):
+                epsilon_tmp = epsilon[1]
+            elif i < 3*(threshold/5):
+                epsilon_tmp = epsilon[2]
+            elif i < 4*(threshold/5):
+                epsilon_tmp = epsilon[3]
+            elif i < threshold:
+                epsilon_tmp = epsilon[4]
+            else:
+                break
+
         curr_leader = random.choice(curr_partitions)
 
         # find belonging cid
@@ -129,17 +143,18 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
                 curr_direction = 'down'
             elif curr_leader in only_up_lst:
                 curr_direction = 'up'
+            elif montecarlo and epsilon_tmp in epsilon[:3]:
+                curr_direction = 'down'
             else:
                 curr_direction = random.choice(direction)
+        elif montecarlo and epsilon_tmp in epsilon[:3]:
+            curr_direction = 'down'
         else:
             curr_direction = random.choice(direction)
-
-        i += 1
 
         if curr_direction == 'up':
 
             # Move one level up   
-
             partitions_tmp, curr_D = calc_partdens_up(curr_leader, num_edges, groups, cid2numedges, cid2numnodes, newcid2cids, curr_partitions)
 
         else:
@@ -165,7 +180,7 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
             if montecarlo:
                 a = random.uniform(0, 1)
 
-                if (a < epsilon): 
+                if (a < epsilon_tmp): 
                     if curr_direction == 'up':
                         only_down_lst = list(set(only_down_lst + list(set(partitions_tmp).difference(curr_partitions))))
                     else:
@@ -174,9 +189,6 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
                     best_D = curr_D
                     list_D[i] = best_D
                     list_clusters[i] = len(curr_partitions)
-
-                if i > threshold:
-                    break
 
         if not montecarlo:
             if (i > threshold) and ((best_D - previous_D) < 0.01):
@@ -187,4 +199,29 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
             if early_stop > stopping_threshold:
                 break
 
+        i += 1
+
     return list_D, list_clusters, curr_partitions
+
+# dataset = '../data/done data/Zachary.txt'
+# delimiter = '-'
+
+# linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges, cid2numnodes, num_edges = link_clustering(filename=dataset, delimiter=delimiter)
+# groups, level, level_entropy = groups_generator(linkage, newcid2cids, num_edges, list_D_plot)
+# colors_dict = color_dict(cid2numedges)
+# #%%       
+# threshold = 10000
+# epsilon = [0.1, 0.05, 0.01, 0.001, 0] 
+# #epsilon = [0.05, 0.01, 0.005, 0.001, 0] 
+
+# best_D_LC, similarity_LC = max(list_D_plot,key=lambda item:item[0])
+
+# list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes, level=level, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, montecarlo=True, epsilon=epsilon)
+# main_path = ''
+# imgname ='dendr'
+# dendrogram_greedy(linkage=linkage, best_partitions=best_partitions, cid2numedges=cid2numedges, newcid2cids=newcid2cids, orig_cid2edge=orig_cid2edge, colors_dict=colors_dict, main_path=main_path, imgname=imgname)
+# imgname1 = f'montecarlo_partitiondensity_{threshold}'
+# imgname2 = f'montecarlo_clusters_{threshold}'
+# tuning_metrics(list_D=list_D, list_clusters=list_clusters, threshold=threshold, main_path=main_path, imgname1=imgname1, imgname2=imgname2)
+            
+# #%%

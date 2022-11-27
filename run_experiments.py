@@ -42,11 +42,10 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
                 dendrogram_plot(num_edges=num_edges_tmp, linkage=linkage_tmp, similarity_value=similarity_value, orig_cid2edge=orig_cid2edge_tmp, newcid2cids=newcid2cids_tmp, cid2numedges=cid2numedges_tmp, level=level_gen, colors_dict=colors_dict_tmp, main_path=main_path, imgname=imgname)
             except:
                 mlflow.end_run()
-                return best_partitions, best_D, similarity_value, num_edges_tmp, linkage_tmp, orig_cid2edge_tmp, cid2numnodes_tmp, cid2numedges_tmp, newcid2cids_tmp, colors_dict_tmp, groups_gen, level_gen
-
+                return 0
 
         elif method == "Greedy algorithm up":
-            best_D, best_partitions = greedy_up(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
+            best_D, best_partitions = greedy_up(num_edges=num_edges, groups=groups, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
             mlflow.log_metric('Partition density', best_D)
 
             try:
@@ -96,7 +95,7 @@ def run_method(exp_id, method, main_path, dataset, delimiter, colors_dict=None, 
         elif method == 'Monte Carlo-tuning dendrogram cut':
 
             threshold = 10000
-            epsilon = 0.001 
+            epsilon = [0.1, 0.05, 0.01, 0.001, 0] 
 
             list_D, list_clusters, best_partitions = tune_cut(num_edges=num_edges, groups=groups, newcid2cids=newcid2cids, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes, level=level, similarity_value=similarity_LC, best_D=best_D_LC, threshold=threshold, montecarlo=True, epsilon=epsilon)
 
@@ -161,9 +160,9 @@ for step, file in enumerate(os.listdir('data/')):
             if not os.path.exists(main_path):
                 os.makedirs(main_path)
 
-            else:
-                logger.warning('Already tested... Continue')
-                continue
+            # else:
+            #     logger.warning('Already tested... Continue')
+            #     continue
 
             try:
                 exp_id = mlflow.create_experiment(name=experiment_name)
@@ -204,6 +203,4 @@ for step, file in enumerate(os.listdir('data/')):
             err_file = open(error_dir+f"Error_{file[:-4]}.txt", "w")
             n = err_file.write(str(e))
             err_file.close()
-
-            #os.rmdir(main_path)
 #%%

@@ -116,6 +116,20 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
 
     while True:
 
+        if montecarlo:
+            if i < threshold/5:
+                epsilon_tmp = epsilon[0]
+            elif i < 2*(threshold/5):
+                epsilon_tmp = epsilon[1]
+            elif i < 3*(threshold/5):
+                epsilon_tmp = epsilon[2]
+            elif i < 4*(threshold/5):
+                epsilon_tmp = epsilon[3]
+            elif i < threshold:
+                epsilon_tmp = epsilon[4]
+            else:
+                break
+
         curr_leader = random.choice(curr_partitions)
 
         # find belonging cid
@@ -129,17 +143,18 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
                 curr_direction = 'down'
             elif curr_leader in only_up_lst:
                 curr_direction = 'up'
+            elif montecarlo and epsilon_tmp in epsilon[:3]:
+                curr_direction = 'down'
             else:
                 curr_direction = random.choice(direction)
+        elif montecarlo and epsilon_tmp in epsilon[:3]:
+            curr_direction = 'down'
         else:
             curr_direction = random.choice(direction)
-
-        i += 1
 
         if curr_direction == 'up':
 
             # Move one level up   
-
             partitions_tmp, curr_D = calc_partdens_up(curr_leader, num_edges, groups, cid2numedges, cid2numnodes, newcid2cids, curr_partitions)
 
         else:
@@ -165,7 +180,7 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
             if montecarlo:
                 a = random.uniform(0, 1)
 
-                if (a < epsilon): 
+                if (a < epsilon_tmp): 
                     if curr_direction == 'up':
                         only_down_lst = list(set(only_down_lst + list(set(partitions_tmp).difference(curr_partitions))))
                     else:
@@ -175,9 +190,6 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
                     list_D[i] = best_D
                     list_clusters[i] = len(curr_partitions)
 
-                if i > threshold:
-                    break
-
         if not montecarlo:
             if (i > threshold) and ((best_D - previous_D) < 0.01):
                 early_stop += 1
@@ -186,5 +198,7 @@ def tune_cut(similarity_value, best_D, cid2numedges, cid2numnodes, newcid2cids, 
 
             if early_stop > stopping_threshold:
                 break
+
+        i += 1
 
     return list_D, list_clusters, curr_partitions

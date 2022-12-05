@@ -33,10 +33,7 @@ def entropy_calc(newcid2cids, num_edges, level):
         E[i] = logs
         max_E[i] = math.log(len(curr_partitions), 2)
 
-    div = [v/max_E[k] for k, v in E.items() if k != (len(E)-1)]
-    avg_div = sum(div)/len(div)
-
     sub = [max_E[k]-v for k, v in E.items() if k != (len(E)-1)]
     avg_sub = sum(sub)/len(sub)
 
-    return E, max_E, div, avg_div, sub, avg_sub 
+    return E, max_E, sub, avg_sub 

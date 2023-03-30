@@ -41,15 +41,34 @@ def dendrogram_plot(num_edges, linkage, similarity_value, orig_cid2edge, newcid2
     for key, val in orig_cid2edge.items():
         labels[key] = val
 
+    np.save(main_path+'labels_lc.npy',link_cols)
+
     # Create plot
+    fig, ax = plt.subplots(figsize=(25,10))
+    ax.axis('off')
     plt.rcParams['axes.grid'] = False
-    plt.rcParams['axes.facecolor'] = 'white'
-    plt.rcParams['axes.edgecolor'] = 'black'
-    plt.figure(figsize=(20,20))
+    #plt.rcParams['axes.facecolor'] = 'white'
+    #plt.rcParams['axes.edgecolor'] = 'white'
+    #plt.figure(figsize=(20,20))
     hierarchy.dendrogram(Z=linkage, labels=labels, link_color_func=lambda x: link_cols[x])
     plt.axhline(y=similarity_value, c='k')
     plt.savefig(main_path+imgname+'.png')
     plt.close()
+    return link_cols
+
+
+def plot_ratio(ratio_list,main_path,best_index):
+    # Create plot
+    fig, ax = plt.subplots(figsize=(15,10))
+    #plt.rcParams['axes.grid'] = False
+    ax.plot(ratio_list,'k.')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.vlines(x=best_index,ymin=0,ymax=1)
+    plt.savefig(main_path+'ratio'+'.png')
+    print('plot ratio')
+    plt.close()
+
 
 def dendrogram_greedy(linkage, best_partitions, cid2numedges, newcid2cids, orig_cid2edge, colors_dict, main_path, imgname):
 
@@ -57,7 +76,6 @@ def dendrogram_greedy(linkage, best_partitions, cid2numedges, newcid2cids, orig_
     best_partitions = sorted(best_partitions, reverse=True)
 
     D_leaf_colors = {key:"#808080" for key in cid2numedges.keys()}  
-
     for key,value in newcid2cids.items():
         value = list(value)
         result = value.copy()
@@ -74,13 +92,17 @@ def dendrogram_greedy(linkage, best_partitions, cid2numedges, newcid2cids, orig_
         c1, c2 = (D_leaf_colors[x] for x in i12)
         link_cols[i+1+len(linkage_np)] = c1
 
+
+    # Create plot
+    fig, ax = plt.subplots(figsize=(25,10))
+    ax.axis('off')
     plt.rcParams['axes.grid'] = False
-    plt.rcParams['axes.facecolor'] = 'white'
-    plt.rcParams['axes.edgecolor'] = 'black'
-    plt.figure(figsize=(20,20))
+    np.save(main_path+'labels_mc.npy',link_cols)
     hierarchy.dendrogram(Z=linkage, labels=list(orig_cid2edge.values()), link_color_func=lambda x: link_cols[x])
-    plt.savefig(main_path+imgname+'.png')
+    fig.savefig(main_path+imgname+'.png')
     plt.close()
+    return link_cols
+
 
 
 def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgname2):
@@ -182,13 +204,19 @@ def tuning_metrics(list_D, list_clusters, threshold, main_path, imgname1, imgnam
 def entropy_plot(entropy, max_entropy, main_path):
 
     import matplotlib.pyplot as plt
-    sns.set_style('darkgrid')
-    sns.set_palette('pastel')
-
-    plt.plot(list(entropy.keys()), list(entropy.values()), color='black')
-    plt.plot(list(max_entropy.keys()), list(max_entropy.values()), color='blue')
-    plt.title('Entropy at each level')
-    #plt.ylabel('Entropy', fontsize=10)
-    plt.xlabel('Level', fontsize=10)
-    plt.savefig(main_path+'entropy.png')
+    #sns.set_style('darkgrid')
+    #sns.set_palette('pastel')
+    import matplotlib as mpl
+    mpl.style.use('default')
+    plt.rcParams.update(plt.rcParamsDefault)
+    fig, ax = plt.subplots()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    plt.plot(list(entropy.values()),list(entropy.keys()), color='black')
+    plt.plot(list(max_entropy.values()), list(max_entropy.keys()),  color='dodgerblue')
+    #plt.title('Entropy at each level')
+    #plt.xlabel('Entropy', fontsize=10)
+    plt.ylabel('Level', fontsize=10)
+    fig.savefig(main_path+'entropy.png')
     plt.close()
+

@@ -10,6 +10,7 @@ from logger import logger
 def read_edgelist_unweighted(filename, delimiter=None):
     adj = defaultdict(set)
     edges = set()
+    i=0
     # Loop through each edge in the network
     for line in open(filename):
         # Get the list of nodes in each edge
@@ -189,4 +190,4 @@ def link_clustering(filename, delimiter):
 
     linkage, list_D_plot, newcid2cids, cid2numedges_m, cid2numnodes_n = single_linkage_HC(edges=edges, num_edges=len(edges), similarities=similarities, edge2cid=edge2cid, cid2edges=cid2edges, cid2nodes=cid2nodes, curr_maxcid=curr_maxcid, cid2numedges=cid2numedges, cid2numnodes=cid2numnodes)
 
-    return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges_m, cid2numnodes_n, len(edges)
+    return linkage, list_D_plot, newcid2cids, orig_cid2edge, cid2numedges_m, cid2numnodes_n, len(edges),len(adj)
